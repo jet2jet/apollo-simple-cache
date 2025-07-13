@@ -1,0 +1,74 @@
+{
+  "name": "apollo-simple-cache",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "engineStrict": true,
+  "description": "",
+  "author": "jet",
+  "license": "MIT",
+  "homepage": "https://github.com/jet2jet/apollo-simple-cache",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jet2jet/apollo-simple-cache.git"
+  },
+  "type": "module",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/esm/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs",
+      "default": "./dist/cjs/index.cjs",
+      "types": "./dist/esm/index.d.mts"
+    }
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.cjs",
+    "build": "npm run build:esm && npm run build:esm:dts && npm run build:cjs && npm run build:cjs:dts",
+    "build:esm": "babel src/main --extensions \".mts\" --out-file-extension \".mjs\" -d dist/esm",
+    "build:esm:dts": "tsc --project tsconfig.main.json --emitDeclarationOnly",
+    "build:cjs": "babel src/main --config-file ./babel.config.cjs.json --extensions \".mts\" --out-file-extension \".cjs\" -d dist/cjs",
+    "build:cjs:dts": "tsc --project tsconfig.cjs.json --emitDeclarationOnly",
+    "benchmark": "tsx --tsconfig src/test/tsconfig.json src/test/benchmark/main.mts",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --project tsconfig.main.json --noEmit && tsc --project src/test/tsconfig.json --noEmit && echo \"Done.\"",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.mjs"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.13.8",
+    "fast-deep-equal": "^3.1.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.0",
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-typescript": "^7.27.1",
+    "@types/jest": "^30.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "babel-plugin-transform-rewrite-imports": "^1.5.3",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.6.0",
+    "jest": "^30.0.4",
+    "patch-package": "^8.0.0",
+    "prettier": "^3.6.2",
+    "react": "^19.1.0",
+    "tinybench": "^4.0.1",
+    "ts-jest": "^29.4.0",
+    "tsx": "^4.20.3",
+    "typescript": "~5.8.3"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0 || ^16.0.0"
+  }
+}

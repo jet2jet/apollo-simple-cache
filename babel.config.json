@@ -1,0 +1,13 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "targets": "node 18, safari >= 12, firefox >= 55, chrome >= 60, edge >= 79"
+      }
+    ],
+    "@babel/preset-typescript"
+  ],
+  "sourceMaps": true
+}

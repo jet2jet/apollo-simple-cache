@@ -1,0 +1,19 @@
+{
+  "extends": "./babel.config.json",
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": "cjs",
+        "targets": "node 18, safari >= 12, firefox >= 55, chrome >= 60, edge >= 79"
+      }
+    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    [
+      "babel-plugin-transform-rewrite-imports",
+      { "replaceExtensions": { ".mjs": ".cjs" } }
+    ]
+  ]
+}

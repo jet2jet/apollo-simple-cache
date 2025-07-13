@@ -1,0 +1,11 @@
+.work
+coverage
+dist
+node_modules
+*.aps
+*.iobj
+*.ipdb
+*.pdb
+*.user
+npm-debug.log
+yarn-error.log

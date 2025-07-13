@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "Run opened test",
+      "type": "node",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test",
+        "--",
+        "--testTimeout",
+        "100000",
+        "--runTestsByPath",
+        "${relativeFile}"
+      ],
+      "request": "launch",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
