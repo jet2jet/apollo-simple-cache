@@ -1,5 +1,6 @@
 import type { StoreObject } from '@apollo/client';
 import type { FieldNode, SelectionSetNode } from 'graphql';
+import equal from '../../utilities/equal.mjs';
 import type {
   ChangedFields,
   ChangedFieldsArray,
@@ -29,6 +30,43 @@ interface SetFieldValuesContext {
   cf: ChangedFieldsArray;
   /** variables */
   v: Record<string, unknown> | undefined;
+}
+
+function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    const aElem = a[i]!;
+    const bElem = b[i]!;
+    if (typeof aElem === 'string') {
+      if (aElem !== bElem) {
+        return false;
+      }
+      continue;
+    } else if (typeof bElem === 'string') {
+      return false;
+    }
+    if (aElem[0] !== bElem[0]) {
+      return false;
+    }
+    if (!equal(aElem[1], bElem[1])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function pushChangedFields(
+  outChangedFields: ChangedFieldsArray,
+  path: ChangedFields | undefined
+) {
+  if (!path) {
+    return;
+  }
+  if (!outChangedFields.some((c) => isEqualChangedFields(c, path))) {
+    outChangedFields.push(path.slice() as ChangedFields);
+  }
 }
 
 function mergeObjectWithId(
@@ -80,8 +118,8 @@ function setFieldValuesImpl<T>(
     const destArray: unknown[] =
       target instanceof Array && target.length === source.length ? target : [];
     destArray.length = source.length;
-    if (destArray !== target && currentPath) {
-      changedFields.push(currentPath.slice() as ChangedFields);
+    if (destArray !== target) {
+      pushChangedFields(changedFields, currentPath);
       currentPath = undefined;
     }
     source.forEach((s: unknown, i) => {
@@ -98,8 +136,8 @@ function setFieldValuesImpl<T>(
             currentPath,
             context
           );
-          if (currentPath && changed) {
-            changedFields.push(currentPath.slice() as ChangedFields);
+          if (changed) {
+            pushChangedFields(changedFields, currentPath);
           }
           const newPath: ChangedFields = [id];
           const [returnValue, changed2] = setFieldValuesImpl(
@@ -110,13 +148,34 @@ function setFieldValuesImpl<T>(
             context
           );
           if (changed2) {
-            changedFields.push(newPath);
+            pushChangedFields(changedFields, newPath);
+          }
+          destArray[i] = returnValue;
+        } else {
+          const [returnValue, changed2] = setFieldValuesImpl(
+            destArray[i],
+            s,
+            selectionSet,
+            currentPath,
+            context
+          );
+          if (changed2) {
+            pushChangedFields(changedFields, currentPath);
           }
           destArray[i] = returnValue;
         }
       }
     });
-    return [destArray as unknown as T, changedFields.length > 0];
+
+    // if changedFields has many fields, assume the object itself is changed
+    if (changedFields.length < 3) {
+      for (const c of changedFields) {
+        pushChangedFields(context.cf, c);
+      }
+      return [destArray as unknown as T, false];
+    } else {
+      return [destArray as unknown as T, true];
+    }
   }
 
   let destination: Record<string, unknown>;
@@ -142,9 +201,7 @@ function setFieldValuesImpl<T>(
       const effectiveArguments = getEffectiveArguments(null, context.v);
       const path = joinCurrentPath(name, effectiveArguments);
       if (process(name, null, typename, undefined, path, effectiveArguments)) {
-        if (path) {
-          changedFields.push(path);
-        }
+        pushChangedFields(changedFields, path);
       }
     }
   } else {
@@ -163,16 +220,16 @@ function setFieldValuesImpl<T>(
           effectiveArguments
         )
       ) {
-        if (path) {
-          changedFields.push(path);
-        }
+        pushChangedFields(changedFields, path);
       }
     }
   }
 
   // if changedFields has many fields, assume the object itself is changed
   if (!changed && changedFields.length < 3) {
-    context.cf.push(...changedFields);
+    for (const c of changedFields) {
+      pushChangedFields(context.cf, c);
+    }
     return [destination as T, false];
   } else {
     return [destination as T, true];
