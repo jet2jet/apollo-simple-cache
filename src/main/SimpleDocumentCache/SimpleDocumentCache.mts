@@ -104,7 +104,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       this.data[key] = write.result as StoreObject;
       return cacheKeyToRef(key);
     } finally {
-      if (--this.txCount === 0) {
+      if (--this.txCount === 0 && write.broadcast !== false) {
         this.broadcastAllWatchers();
       }
     }
@@ -124,18 +124,26 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
     const key = this.getCacheKey(query.query, query.variables);
     const data = this.data[key] as T | undefined;
     if (data === undefined) {
-      return {
-        complete: false,
-        result: undefined,
-        missing: [
-          new MissingFieldError(
-            `'${key}' is not found`,
-            [],
-            query.query,
-            query.variables
-          ),
-        ],
-      };
+      if (query.returnPartialData !== false) {
+        return {
+          complete: false,
+          result: undefined,
+          missing: [
+            new MissingFieldError(
+              `'${key}' is not found`,
+              [key],
+              query.query,
+              query.variables
+            ),
+          ],
+        };
+      }
+      throw new MissingFieldError(
+        `'${key}' is not found`,
+        [key],
+        query.query,
+        query.variables
+      );
     } else {
       return {
         complete: true,
@@ -266,7 +274,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
 
       return isModified;
     } finally {
-      if (!--this.txCount && broadcast) {
+      if (!--this.txCount && broadcast !== false) {
         this.broadcastAllWatchers();
       }
     }

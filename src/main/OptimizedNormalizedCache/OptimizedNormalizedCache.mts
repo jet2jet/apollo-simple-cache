@@ -306,7 +306,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       variableString
     );
 
-    if (query.returnPartialData) {
+    if (query.returnPartialData !== false) {
       const proxy = this.getProxy(
         definition.selectionSet,
         fragmentMap,
