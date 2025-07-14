@@ -19,8 +19,10 @@
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.mts",
+  "// For Apollo Client 3, we always use CommonJS on Node.js due to importing Apollo Client modules": "",
   "exports": {
     ".": {
+      "node": "./dist/cjs/index.cjs",
       "import": "./dist/esm/index.mjs",
       "require": "./dist/cjs/index.cjs",
       "default": "./dist/cjs/index.cjs",
