@@ -61,7 +61,6 @@
     "eslint-plugin-promise": "^6.6.0",
     "jest": "^30.0.4",
     "jest-extended": "^6.0.0",
-    "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "tinybench": "^4.0.1",
