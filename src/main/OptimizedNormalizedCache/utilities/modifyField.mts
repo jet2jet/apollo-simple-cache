@@ -139,10 +139,11 @@ function makeModifyProxyObject(
       return true;
     },
     ownKeys: () => keys,
+    has: (_, p) => keys.some((k) => p === k),
     getOwnPropertyDescriptor: () => {
       return {
         enumerable: true,
-        configurable: false,
+        configurable: true,
       };
     },
   });
@@ -521,9 +522,12 @@ function doModify(
     return object;
   }; // mergeIntoStore
 
-  let _currentPath: ChangedFields | undefined = currentPath;
+  let _currentPath: ChangedFields | undefined = currentPath && [
+    ...currentPath,
+    storeFieldName,
+  ];
   if (value == null || typeof value !== 'object') {
-    outChangedFields.push([...currentPath]);
+    outChangedFields.push(_currentPath);
     _currentPath = undefined;
   }
   const ret = mergeIntoStore(
