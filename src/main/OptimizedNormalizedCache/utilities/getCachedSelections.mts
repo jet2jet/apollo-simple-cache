@@ -60,23 +60,27 @@ function makeSelections(
     target: Readonly<FieldNode>,
     source: Readonly<FieldNode>
   ): FieldNode {
-    if (source.selectionSet == null) {
-      return { ...target };
+    if (!source.selectionSet) {
+      if (!target.selectionSet) {
+        return { ...target };
+      }
+      return {
+        ...target,
+        selectionSet: {
+          ...target.selectionSet,
+          selections: target.selectionSet.selections.slice(),
+        },
+      };
     }
     const selections: SelectionNode[] = (
-      target.selectionSet != null ? [...target.selectionSet.selections] : []
+      target.selectionSet ? [...target.selectionSet.selections] : []
     ).concat(source.selectionSet.selections);
-    const o = makeSelections(
-      { kind: Kind.SELECTION_SET, selections },
-      fragmentMap
-    );
-    o.map((tuple) => tuple[1]);
     return {
       ...target,
       selectionSet: {
         ...target.selectionSet,
         ...source.selectionSet,
-        selections: o.map((tuple) => tuple[1]),
+        selections,
       },
     };
   }
