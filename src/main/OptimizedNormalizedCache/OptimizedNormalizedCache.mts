@@ -14,7 +14,11 @@ import type {
   CanReadFunction,
   ToReferenceFunction,
 } from '@apollo/client/cache/core/types/common';
-import { addTypenameToDocument, isReference } from '@apollo/client/utilities';
+import {
+  addTypenameToDocument,
+  isReference,
+  type StoreObject,
+} from '@apollo/client/utilities';
 import { Kind, OperationTypeNode, type SelectionSetNode } from 'graphql';
 import cloneVariables from '../utilities/cloneVariables.mjs';
 import getMainDefinition from '../utilities/getMainDefinition.mjs';
@@ -573,6 +577,15 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
 
   public override transformDocument(document: DocumentNode): DocumentNode {
     return this.addTypenameTransform.transformDocument(document);
+  }
+
+  public override identify(
+    object: StoreObject | Reference
+  ): string | undefined {
+    if (isReference(object)) {
+      return object.__ref;
+    }
+    return makeStoreId(object, this.keyFields, this.supertypeMap);
   }
 
   private getMissingFields(
