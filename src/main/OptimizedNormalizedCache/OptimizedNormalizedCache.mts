@@ -31,7 +31,7 @@ import makeProxyObject from './proxyObjects/makeProxyObject.mjs';
 import releaseProxyRecords from './proxyObjects/releaseProxyRecords.mjs';
 import {
   PROXY_SYMBOL_BASE,
-  PROXY_SYMBOL_REVOKED,
+  PROXY_SYMBOL_DIRTY,
   type ProxyCacheMap,
   type ProxyCacheRecord,
   type ProxyObject,
@@ -756,7 +756,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       }
 
       if (isWatching) {
-        proxy[PROXY_SYMBOL_REVOKED] = true;
+        proxy[PROXY_SYMBOL_DIRTY] = true;
         data[1] = true;
       }
     }

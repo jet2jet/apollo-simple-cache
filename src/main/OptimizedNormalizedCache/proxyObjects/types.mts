@@ -4,7 +4,7 @@ import type { FragmentMap } from '../internalTypes.mjs';
 // @internal
 export const PROXY_SYMBOL_OWN_KEYS = Symbol('snc:proxyOwnKeys');
 // @internal
-export const PROXY_SYMBOL_REVOKED = Symbol('snc:proxyRevoked');
+export const PROXY_SYMBOL_DIRTY = Symbol('snc:proxyDirty');
 // @internal
 export const PROXY_SYMBOL_TARGET = Symbol('snc:proxyTarget');
 // @internal
@@ -21,7 +21,7 @@ export const PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT = Symbol(
 // @internal
 export type ProxyObject = Record<string | symbol, unknown> & {
   readonly [PROXY_SYMBOL_OWN_KEYS]: readonly string[];
-  [PROXY_SYMBOL_REVOKED]: boolean;
+  [PROXY_SYMBOL_DIRTY]: boolean;
   readonly [PROXY_SYMBOL_TARGET]: object;
   readonly [PROXY_SYMBOL_BASE]: object;
   readonly [PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS]: (

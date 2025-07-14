@@ -20,13 +20,12 @@ import getFieldValue from '../utilities/getFieldValue.mjs';
 import makeStoreId from '../utilities/makeStoreId.mjs';
 import findExistingProxy from './findExistingProxy.mjs';
 import isProxyObject from './isProxyObject.mjs';
-import isProxyRevoked from './isProxyRevoked.mjs';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT,
   PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS,
   PROXY_SYMBOL_OWN_KEYS,
-  PROXY_SYMBOL_REVOKED,
+  PROXY_SYMBOL_DIRTY,
   PROXY_SYMBOL_TARGET,
   type ProxyCacheMap,
   type ProxyCacheRecord,
@@ -95,17 +94,13 @@ export default function makeProxyObject(
   const t = Object.create(null) as Record<string | symbol, unknown>;
 
   const ownKeys = Object.keys(ownKeysMap);
-  let revoked = false;
+  let dirty = false;
 
   const proxy = new Proxy<ProxyObject>(t as ProxyObject, {
     get: (_, p) => {
       // If already cached, return it
       if (hasOwn(t, p)) {
-        const v = t[p];
-        // If proxy itself is not revoked but sub proxy object is revoked, retrieve fresh proxy object
-        if (revoked || !isProxyRevoked(v)) {
-          return v;
-        }
+        return t[p];
       }
 
       switch (p) {
@@ -115,8 +110,8 @@ export default function makeProxyObject(
           return base;
         case PROXY_SYMBOL_OWN_KEYS:
           return ownKeys;
-        case PROXY_SYMBOL_REVOKED:
-          return revoked;
+        case PROXY_SYMBOL_DIRTY:
+          return dirty;
         case PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS:
           return (fieldName: string) => {
             const fieldArguments: ArgumentNode[] = [];
@@ -153,9 +148,9 @@ export default function makeProxyObject(
         return t[p];
       }
 
-      // If revoked, reading from store is blocked
-      if (revoked) {
-        return undefined;
+      // Return '__dirty' value only if dirty is true
+      if (p === '__dirty' && dirty) {
+        return true;
       }
 
       if (!ownKeysMap[p]) {
@@ -245,25 +240,21 @@ export default function makeProxyObject(
       if (typeof p === 'symbol') {
         return false;
       }
+      if (dirty && p === '__dirty') {
+        return true;
+      }
       return !!ownKeysMap[p];
     },
-    ownKeys: () => ownKeys,
+    // Add '__dirty' field to compare with fresh object resulting not match
+    ownKeys: () => (dirty ? ownKeys.concat('__dirty') : ownKeys),
     set: (_, p, newValue: unknown) => {
       if (typeof p === 'symbol') {
-        if (p === PROXY_SYMBOL_REVOKED) {
+        if (p === PROXY_SYMBOL_DIRTY) {
           if (!newValue) {
             return false;
           }
 
-          revoked = true;
-
-          // When revoking, converts cached object value (i.e. proxy object) to simple object
-          for (const key in t) {
-            const val = t[key];
-            if (isProxyObject(val)) {
-              t[key] = val[PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT]();
-            }
-          }
+          dirty = true;
         } else {
           t[p] = newValue;
         }

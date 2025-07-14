@@ -5,7 +5,7 @@ import {
   type ProxyCacheEntry,
   type ProxyCacheMap,
   type ProxyCacheRecord,
-  PROXY_SYMBOL_REVOKED,
+  PROXY_SYMBOL_DIRTY,
 } from './types.mjs';
 
 // @internal
@@ -128,7 +128,7 @@ export default function findExistingProxy(
     }
     if (record[0] === variablesString) {
       const p = record[2];
-      if (p && p[PROXY_SYMBOL_REVOKED]) {
+      if (p && p[PROXY_SYMBOL_DIRTY]) {
         revokedProxyRecords.push([record, records]);
       } else {
         if (!noGrow) {

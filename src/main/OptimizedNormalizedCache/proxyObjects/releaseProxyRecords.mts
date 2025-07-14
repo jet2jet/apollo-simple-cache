@@ -4,7 +4,7 @@ import type { ChangedFields, ChangedFieldsArray } from '../internalTypes.mjs';
 import isProxyObject from './isProxyObject.mjs';
 import {
   PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS,
-  PROXY_SYMBOL_REVOKED,
+  PROXY_SYMBOL_DIRTY,
   PROXY_SYMBOL_TARGET,
   type ProxyCacheMap,
   type ProxyCacheRecord,
@@ -36,7 +36,7 @@ function releaseProxyFromField(
         releaseProxyFromField(o, field, index + 1);
       }
     }
-    proxy[PROXY_SYMBOL_REVOKED] = true;
+    proxy[PROXY_SYMBOL_DIRTY] = true;
     return;
   }
 
@@ -58,6 +58,8 @@ function releaseProxyFromField(
   const o = (target as Record<string, unknown>)[name];
   if (o != null && typeof o === 'object') {
     releaseProxyFromField(o, field, index + 1);
+  } else if (index === field.length - 1) {
+    proxy[PROXY_SYMBOL_DIRTY] = true;
   }
 }
 
@@ -78,7 +80,7 @@ function releaseProxyRecordsImpl(
         continue;
       }
       releaseProxyFromField(proxy, field, 1);
-      if (proxy[PROXY_SYMBOL_REVOKED]) {
+      if (proxy[PROXY_SYMBOL_DIRTY]) {
         entry.r.splice(i, 1);
         const j = proxyCacheRecords.indexOf(record);
         if (j >= 0) {
