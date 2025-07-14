@@ -13,6 +13,10 @@ export type PersonSimpleQuery = Pick<QueryType, '__typename'> & {
 };
 export type LocationsQuery = Pick<QueryType, '__typename' | 'locations'>;
 export type LocationQuery = Pick<QueryType, '__typename' | 'location'>;
+export type LocationNamesQuery = Pick<
+  QueryType,
+  '__typename' | 'locationNames'
+>;
 
 export const PersonsDocument = gql`
   query Persons {
@@ -20,6 +24,9 @@ export const PersonsDocument = gql`
       id
       name
       sha256
+      tags {
+        name
+      }
       address {
         id
         name
@@ -34,6 +41,9 @@ export const PersonDocument = gql`
       id
       name
       sha256
+      tags {
+        name
+      }
       address {
         id
         name
@@ -68,3 +78,9 @@ export const LocationDocument = gql`
     }
   }
 ` as unknown as TypedDocumentNode<LocationQuery, LocationInputType>;
+
+export const LocationNamesDocument = gql`
+  query LocationNames {
+    locationNames
+  }
+` as unknown as TypedDocumentNode<LocationNamesQuery, never>;

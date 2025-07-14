@@ -1,4 +1,10 @@
-import type { ApolloCache, Cache } from '@apollo/client';
+import {
+  MissingFieldError,
+  type ApolloCache,
+  type Cache,
+  type Reference,
+  type StoreObject,
+} from '@apollo/client';
 import { jest } from '@jest/globals';
 import {
   dummyGetAllUsersData,
@@ -12,12 +18,15 @@ import {
 } from '../../data/complexQueries.mjs';
 import { locationsData, personsData } from '../../data/dummyData.mjs';
 import {
+  LocationNamesDocument,
   LocationsDocument,
   PersonDocument,
   PersonsDocument,
   PersonSimpleDocument,
+  type PersonQuery,
   type PersonsQuery,
 } from '../../data/simpleQueries.mjs';
+import type { PersonType } from '../../data/types.mjs';
 
 export function registerTests(
   makeCache: () => ApolloCache<unknown>,
@@ -32,6 +41,11 @@ export function registerTests(
     const locationsDocument = cache.transformDocument(
       LocationsDocument
     ) as typeof LocationsDocument;
+    const locationNamesDocument = cache.transformDocument(
+      LocationNamesDocument
+    ) as typeof LocationNamesDocument;
+
+    const locationNames = locationsData.map((l) => l.name);
 
     cache.writeQuery({
       query: personsDocument,
@@ -47,6 +61,13 @@ export function registerTests(
         locations: locationsData,
       },
     });
+    cache.writeQuery({
+      query: locationNamesDocument,
+      data: {
+        __typename: 'Query',
+        locationNames,
+      },
+    });
 
     const q1 = cache.readQuery({ query: personsDocument });
     expect(q1).toEqual(
@@ -58,6 +79,12 @@ export function registerTests(
     expect(q2).toEqual(
       expect.objectContaining({
         locations: locationsData,
+      })
+    );
+    const q3 = cache.readQuery({ query: locationNamesDocument });
+    expect(q3).toEqual(
+      expect.objectContaining({
+        locationNames,
       })
     );
   });
@@ -194,6 +221,30 @@ export function registerTests(
       },
     });
     expect(fn).not.toHaveBeenCalled();
+
+    fn.mockClear();
+
+    // If broadcast = false, watcher callback will not be called
+    const newPersonsData = personsData.map((p) => ({
+      ...p,
+      name: p.name + '_mod',
+    }));
+    cache.writeQuery({
+      query: personsDocument,
+      data: {
+        __typename: 'Query',
+        persons: newPersonsData,
+      },
+      broadcast: false,
+    });
+    expect(fn).not.toHaveBeenCalled();
+    // but data is changed
+    const q = cache.readQuery({ query: personsDocument });
+    expect(q).toEqual(
+      expect.objectContaining({
+        persons: newPersonsData,
+      })
+    );
   });
 
   test('watch and write query with transaction', () => {
@@ -361,4 +412,161 @@ export function registerTests(
       );
     });
   }
+
+  test('modify data and receive watch callback', () => {
+    const cache = makeCache();
+
+    const personDocument = cache.transformDocument(
+      PersonDocument
+    ) as typeof PersonDocument;
+
+    const person = personsData[0]!;
+
+    cache.writeQuery({
+      query: personDocument,
+      variables: { id: person.id },
+      data: { __typename: 'Query', person },
+    });
+
+    const fn = jest.fn();
+    cache.watch({
+      query: personDocument,
+      variables: { id: person.id },
+      optimistic: false,
+      callback: fn,
+    });
+
+    const id = cache.identify({ __typename: 'Person', id: person.id });
+    if (id) {
+      cache.modify({
+        id,
+        fields: {
+          name: (value: string) => {
+            return `Modified_${value as string}`;
+          },
+        },
+      });
+    } else {
+      cache.modify({
+        fields: {
+          person: (value: unknown) => {
+            if (!value || (value as PersonType).id !== person.id) {
+              return value;
+            }
+            const newValue = { ...(value as PersonType) };
+            newValue.name = `Modified_${newValue.name}`;
+            return newValue;
+          },
+        },
+      });
+    }
+
+    expect(fn).toHaveBeenCalledWith<
+      Parameters<Cache.WatchCallback<PersonQuery>>
+    >(
+      {
+        complete: true,
+        result: expect.objectContaining({
+          person: { ...person, name: `Modified_${person.name}` },
+        }),
+      },
+      undefined
+    );
+  });
+
+  test('delete data and receive watch callback (returnPartialData = undefined)', () => {
+    const cache = makeCache();
+
+    const personDocument = cache.transformDocument(
+      PersonDocument
+    ) as typeof PersonDocument;
+
+    const person = personsData[0]!;
+
+    cache.writeQuery({
+      query: personDocument,
+      variables: { id: person.id },
+      data: { __typename: 'Query', person },
+    });
+
+    const fn = jest.fn();
+    cache.watch({
+      query: personDocument,
+      variables: { id: person.id },
+      optimistic: false,
+      callback: fn,
+    });
+
+    cache.modify({
+      fields: {
+        person: (value: unknown, details) => {
+          if (!value) {
+            return value;
+          }
+          if (
+            details.readField('id', value as Reference | StoreObject) ===
+            person.id
+          ) {
+            return details.DELETE;
+          }
+          return value;
+        },
+      },
+    });
+
+    expect(fn).toHaveBeenCalledWith<
+      Parameters<Cache.WatchCallback<PersonQuery>>
+    >(
+      {
+        complete: false,
+        missing: [expect.any(MissingFieldError)],
+        result: expect.toBeOneOf([expect.anything(), undefined]),
+      },
+      undefined
+    );
+  });
+
+  test('delete data and receive watch callback (returnPartialData = false)', () => {
+    const cache = makeCache();
+
+    const personDocument = cache.transformDocument(
+      PersonDocument
+    ) as typeof PersonDocument;
+
+    const person = personsData[0]!;
+
+    cache.writeQuery({
+      query: personDocument,
+      variables: { id: person.id },
+      data: { __typename: 'Query', person },
+    });
+
+    const fn = jest.fn();
+    cache.watch({
+      query: personDocument,
+      variables: { id: person.id },
+      optimistic: false,
+      callback: fn,
+      returnPartialData: false,
+    });
+
+    expect(() =>
+      cache.modify({
+        fields: {
+          person: (value: unknown, details) => {
+            if (!value) {
+              return value;
+            }
+            if (
+              details.readField('id', value as Reference | StoreObject) ===
+              person.id
+            ) {
+              return details.DELETE;
+            }
+            return value;
+          },
+        },
+      })
+    ).toThrow(MissingFieldError);
+  });
 }

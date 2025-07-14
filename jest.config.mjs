@@ -16,6 +16,7 @@ export default {
   clearMocks: true,
   testEnvironment: 'node',
   testMatch: ['<rootDir>/src/test/**/*.test.mts'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/setupTest.mts'],
   moduleNameMapper: {
     '^@/(.*)\\.mjs$': '<rootDir>/src/main/$1',
     '^@/(.*)$': '<rootDir>/src/main/$1',

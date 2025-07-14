@@ -18,12 +18,22 @@ const LocationType = new GraphQLObjectType({
   },
 });
 
+const TagType = new GraphQLObjectType({
+  name: 'Tag',
+  fields: {
+    name: { type: new GraphQLNonNull(GraphQLString) },
+  },
+});
+
 const PersonType = new GraphQLObjectType({
   name: 'Person',
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: new GraphQLNonNull(GraphQLString) },
     sha256: { type: new GraphQLNonNull(GraphQLString) },
+    tags: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(TagType))),
+    },
     address: { type: LocationType },
   },
 });
@@ -69,6 +79,14 @@ const QueryType = new GraphQLObjectType({
           return null;
         }
         return locationsData[i]!;
+      },
+    },
+    locationNames: {
+      type: new GraphQLNonNull(
+        new GraphQLList(new GraphQLNonNull(GraphQLString))
+      ),
+      resolve: (): readonly string[] => {
+        return locationsData.map((l) => l.name);
       },
     },
   } satisfies Record<

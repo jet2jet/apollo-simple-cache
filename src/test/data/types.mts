@@ -4,12 +4,18 @@ export interface LocationType {
   name: string;
 }
 
+export interface TagType {
+  __typename: 'Tag';
+  name: string;
+}
+
 export interface PersonType {
   __typename: 'Person';
   id: number;
   name: string;
   sha256: string;
-  address?: LocationType | null;
+  tags: ReadonlyArray<Readonly<TagType>>;
+  address?: Readonly<LocationType> | null;
 }
 
 export interface PersonSimpleType {
@@ -17,7 +23,7 @@ export interface PersonSimpleType {
   id: number;
   name: string;
   sha256: string;
-  address?: LocationType | null;
+  address?: Readonly<LocationType> | null;
 }
 
 export interface PersonInputType {
@@ -30,8 +36,9 @@ export interface LocationInputType {
 
 export interface QueryType {
   __typename: 'Query';
-  persons: readonly PersonType[];
-  person: PersonType | null;
-  locations: readonly LocationType[];
-  location: LocationType | null;
+  persons: ReadonlyArray<Readonly<PersonType>>;
+  person: Readonly<PersonType> | null;
+  locations: ReadonlyArray<Readonly<LocationType>>;
+  location: Readonly<LocationType> | null;
+  locationNames: readonly string[];
 }
