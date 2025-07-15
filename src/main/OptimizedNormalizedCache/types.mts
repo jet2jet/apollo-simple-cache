@@ -1,6 +1,23 @@
-/** This type can be used to add your types */
+/**
+ * This type can be used to add your types.
+ *
+ * @example
+ * ```ts
+ * declare module 'apollo-simple-cache' {
+ *   export interface CustomDefinition {
+ *     typenames: ('Person' | 'Location')[];
+ *   }
+ * }
+ * ```
+ */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface PredefinedTypenames {}
+export interface CustomDefinition {}
+
+type CustomTypenames = CustomDefinition extends {
+  typenames: ReadonlyArray<infer T>;
+}
+  ? T
+  : never;
 
 export interface KeyFieldsObject {
   /** Key field names for all types */
@@ -11,9 +28,9 @@ export interface KeyFieldsObject {
 /** An array of key field names for all types, or {@link KeyFieldsObject} */
 export type KeyFields = readonly string[] | KeyFieldsObject;
 
-export interface PossibleTypesMap {
-  readonly [supertype: string | keyof PredefinedTypenames]: readonly string[];
-}
+export type PossibleTypesMap = {
+  readonly [supertype in (string & {}) | CustomTypenames]?: readonly string[];
+};
 
 export type DataIdFromObjectFunction = (object: object) => string | undefined;
 
@@ -32,9 +49,9 @@ export type OptimizedReadFunction = (
   context: OptimizedReadContext
 ) => unknown;
 
-export interface OptimizedReadMap {
-  [typename: string | keyof PredefinedTypenames]: OptimizedReadFunction;
-}
+export type OptimizedReadMap = {
+  [typename in (string & {}) | CustomTypenames]?: OptimizedReadFunction;
+};
 
 export interface WriteToCacheContext {
   effectiveArguments: Record<string, unknown>;
@@ -48,9 +65,9 @@ export type WriteToCacheFunction = (
   context: WriteToCacheContext
 ) => unknown;
 
-export interface WriteToCacheMap {
-  [typename: string | keyof PredefinedTypenames]: WriteToCacheFunction;
-}
+export type WriteToCacheMap = {
+  [typename in (string & {}) | CustomTypenames]?: WriteToCacheFunction;
+};
 
 export interface OptimizedNormalizedCacheOptions {
   keyFields?: KeyFields | undefined;
