@@ -14,16 +14,18 @@ function releaseProxyFromField(
   proxy: object,
   field: ChangedFields,
   index: number
-) {
+): boolean {
   if (proxy instanceof Array) {
+    let isDirty = false;
     for (const o of proxy) {
       if (o != null && typeof o === 'object') {
-        releaseProxyFromField(o, field, index);
+        isDirty = releaseProxyFromField(o, field, index) || isDirty;
       }
     }
+    return isDirty;
   }
   if (!isProxyObject(proxy)) {
-    return;
+    return false;
   }
 
   const target = proxy[PROXY_SYMBOL_TARGET];
@@ -37,7 +39,7 @@ function releaseProxyFromField(
       }
     }
     proxy[PROXY_SYMBOL_DIRTY] = true;
-    return;
+    return true;
   }
 
   const f = field[index]!;
@@ -45,21 +47,24 @@ function releaseProxyFromField(
   const args = typeof f === 'string' ? undefined : f[1];
 
   if (!hasOwn(target, name)) {
-    return;
+    return false;
   }
 
   if (args) {
     const proxyArgs = proxy[PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS](name);
     if (!equal(args, proxyArgs)) {
-      return;
+      return false;
     }
   }
 
   const o = (target as Record<string, unknown>)[name];
   if (o != null && typeof o === 'object') {
-    releaseProxyFromField(o, field, index + 1);
+    return releaseProxyFromField(o, field, index + 1);
   } else if (index === field.length - 1) {
     proxy[PROXY_SYMBOL_DIRTY] = true;
+    return true;
+  } else {
+    return false;
   }
 }
 
