@@ -33,11 +33,9 @@ import {
   type RevokedProxyRecords,
 } from './types.mjs';
 
-// @internal
-export default function makeProxyObject(
+function makeProxyObjectImpl(
   base: object,
   selectionSets: readonly SelectionSetNode[],
-  id: string | undefined,
   variables: unknown,
   variablesString: string,
   fragmentMap: FragmentMap,
@@ -45,29 +43,8 @@ export default function makeProxyObject(
   supertypeMap: SupertypeMap | undefined,
   optimizedRead: OptimizedReadMap,
   dataIdFromObject: DataIdFromObjectFunction,
-  readFromId: ReadFromIdFunction,
-  proxyCacheMap: ProxyCacheMap,
-  proxyCacheRecords: ProxyCacheRecord[],
-  revokedProxyRecords: RevokedProxyRecords,
-  setProxyCleanTimer: () => void
-): ProxyObject {
-  if (!id) {
-    id = makeStoreId(base, keyFields, supertypeMap);
-  }
-  const entry = findExistingProxy(
-    base,
-    id,
-    fragmentMap,
-    proxyCacheMap,
-    proxyCacheRecords,
-    revokedProxyRecords,
-    selectionSets,
-    variablesString
-  )[0];
-  if (entry[2] !== undefined) {
-    return entry[2];
-  }
-
+  readFromId: ReadFromIdFunction
+) {
   const typename = (base as StoreObject).__typename;
   variables = cloneVariables(variables);
 
@@ -214,10 +191,9 @@ export default function makeProxyObject(
               : v
           );
         }
-        return makeProxyObject(
+        return makeProxyObjectImpl(
           incoming,
           subSelectionSet,
-          undefined,
           variables,
           variablesString,
           fragmentMap,
@@ -225,11 +201,7 @@ export default function makeProxyObject(
           supertypeMap,
           optimizedRead,
           dataIdFromObject,
-          readFromId,
-          proxyCacheMap,
-          proxyCacheRecords,
-          revokedProxyRecords,
-          setProxyCleanTimer
+          readFromId
         );
       }
     },
@@ -270,6 +242,57 @@ export default function makeProxyObject(
       };
     },
   });
+
+  return proxy;
+}
+
+// @internal
+export default function makeProxyObject(
+  base: object,
+  selectionSets: readonly SelectionSetNode[],
+  id: string | undefined,
+  variables: unknown,
+  variablesString: string,
+  fragmentMap: FragmentMap,
+  keyFields: KeyFields | undefined,
+  supertypeMap: SupertypeMap | undefined,
+  optimizedRead: OptimizedReadMap,
+  dataIdFromObject: DataIdFromObjectFunction,
+  readFromId: ReadFromIdFunction,
+  proxyCacheMap: ProxyCacheMap,
+  proxyCacheRecords: ProxyCacheRecord[],
+  revokedProxyRecords: RevokedProxyRecords,
+  setProxyCleanTimer: () => void
+): ProxyObject {
+  if (!id) {
+    id = makeStoreId(base, keyFields, supertypeMap);
+  }
+  const entry = findExistingProxy(
+    base,
+    id,
+    fragmentMap,
+    proxyCacheMap,
+    proxyCacheRecords,
+    revokedProxyRecords,
+    selectionSets,
+    variablesString
+  )[0];
+  if (entry[2] !== undefined) {
+    return entry[2];
+  }
+
+  const proxy = makeProxyObjectImpl(
+    base,
+    selectionSets,
+    variables,
+    variablesString,
+    fragmentMap,
+    keyFields,
+    supertypeMap,
+    optimizedRead,
+    dataIdFromObject,
+    readFromId
+  );
 
   entry[2] = proxy;
 
