@@ -36,6 +36,7 @@ import releaseProxyRecords from './proxyObjects/releaseProxyRecords.mjs';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_DIRTY,
+  type BaseCache,
   type ProxyCacheMap,
   type ProxyCacheRecord,
   type ProxyObject,
@@ -83,19 +84,30 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     ROOT_MUTATION: Record<string, unknown>;
   };
 
+  // @internal
+  public readonly keyFields: KeyFields | undefined;
+  // @internal
+  public readonly supertypeMap: SupertypeMap | undefined;
+  // @internal
+  public readonly optimizedRead: OptimizedReadMap;
+  // @internal
+  public readonly dataIdFromObject: DataIdFromObjectFunction;
+  // @internal
+  public readonly readFromId: ReadFromIdFunction = (id) => this.data[id];
+  // @internal
+  public readonly setProxyCleanTimer: () => void;
+
   private readonly addTypenameTransform: DocumentTransform;
-  private readonly keyFields: KeyFields | undefined;
-  private readonly supertypeMap: SupertypeMap | undefined;
-  private readonly optimizedRead: OptimizedReadMap;
   private readonly writeToCacheMap: WriteToCacheMap;
-  private readonly dataIdFromObject: DataIdFromObjectFunction;
-  private readonly readFromId: ReadFromIdFunction = (id) => this.data[id];
   private readonly queryType: string;
   private readonly mutationType: string;
 
-  private proxyCacheMap: ProxyCacheMap;
-  private proxyCacheRecords: ProxyCacheRecord[];
-  private revokedProxyRecords: RevokedProxyRecords;
+  // @internal
+  public proxyCacheMap: ProxyCacheMap;
+  // @internal
+  public proxyCacheRecords: ProxyCacheRecord[];
+  // @internal
+  public revokedProxyRecords: RevokedProxyRecords;
   private proxyCacheCleanTimer: ReturnType<typeof setTimeout> | undefined;
 
   private txCount: number;
@@ -104,12 +116,14 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
 
   public readonly canRead: CanReadFunction;
   public readonly toReference: ToReferenceFunction;
-  private readonly setProxyCleanTimer: () => void;
 
   public constructor(
     options: OptimizedNormalizedCacheOptions | undefined = {}
   ) {
     super();
+
+    // Check whether this extends BaseCache instead of using `implements` (to avoid exposing `BaseCache` type)
+    this satisfies BaseCache;
 
     this.addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
@@ -633,15 +647,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       variables,
       variablesString,
       fragmentMap,
-      this.keyFields,
-      this.supertypeMap,
-      this.optimizedRead,
-      this.dataIdFromObject,
-      this.readFromId,
-      this.proxyCacheMap,
-      this.proxyCacheRecords,
-      this.revokedProxyRecords,
-      this.setProxyCleanTimer
+      this
     );
   }
 
