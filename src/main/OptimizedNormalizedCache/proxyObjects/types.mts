@@ -13,10 +13,6 @@ export const PROXY_SYMBOL_BASE = Symbol('snc:proxyBase');
 export const PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS = Symbol(
   'snc:proxyGetEffectiveArguments'
 );
-// @internal
-export const PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT = Symbol(
-  'snc:proxyConvertToSimpleObject'
-);
 
 // @internal
 export type ProxyObject = Record<string | symbol, unknown> & {
@@ -27,7 +23,6 @@ export type ProxyObject = Record<string | symbol, unknown> & {
   readonly [PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS]: (
     fieldName: string
   ) => Record<string, unknown> | undefined;
-  readonly [PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT]: () => object;
 };
 
 // @internal

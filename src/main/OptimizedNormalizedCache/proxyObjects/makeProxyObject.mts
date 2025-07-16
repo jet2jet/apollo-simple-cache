@@ -19,10 +19,8 @@ import getEffectiveArguments from '../utilities/getEffectiveArguments.mjs';
 import getFieldValue from '../utilities/getFieldValue.mjs';
 import makeStoreId from '../utilities/makeStoreId.mjs';
 import findExistingProxy from './findExistingProxy.mjs';
-import isProxyObject from './isProxyObject.mjs';
 import {
   PROXY_SYMBOL_BASE,
-  PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT,
   PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS,
   PROXY_SYMBOL_OWN_KEYS,
   PROXY_SYMBOL_DIRTY,
@@ -104,19 +102,6 @@ function makeProxyObjectImpl(
               fieldArguments,
               variables as Record<string, unknown> | undefined
             );
-          };
-        case PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT:
-          return () => {
-            const o = Object.create(null);
-            for (const key in t) {
-              const val = t[key];
-              if (isProxyObject(val)) {
-                o[key] = val[PROXY_SYMBOL_CONVERT_TO_SIMPLE_OBJECT]();
-              } else {
-                o[key] = val;
-              }
-            }
-            return o;
           };
       }
 
