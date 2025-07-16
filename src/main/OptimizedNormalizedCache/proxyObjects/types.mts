@@ -2,8 +2,6 @@ import type { SelectionSetNode } from 'graphql';
 import type { FragmentMap } from '../internalTypes.mjs';
 
 // @internal
-export const PROXY_SYMBOL_OWN_KEYS = Symbol('snc:proxyOwnKeys');
-// @internal
 export const PROXY_SYMBOL_DIRTY = Symbol('snc:proxyDirty');
 // @internal
 export const PROXY_SYMBOL_TARGET = Symbol('snc:proxyTarget');
@@ -16,7 +14,6 @@ export const PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS = Symbol(
 
 // @internal
 export type ProxyObject = Record<string | symbol, unknown> & {
-  readonly [PROXY_SYMBOL_OWN_KEYS]: readonly string[];
   [PROXY_SYMBOL_DIRTY]: boolean;
   readonly [PROXY_SYMBOL_TARGET]: object;
   readonly [PROXY_SYMBOL_BASE]: object;

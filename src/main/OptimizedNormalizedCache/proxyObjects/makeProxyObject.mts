@@ -22,7 +22,6 @@ import findExistingProxy from './findExistingProxy.mjs';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS,
-  PROXY_SYMBOL_OWN_KEYS,
   PROXY_SYMBOL_DIRTY,
   PROXY_SYMBOL_TARGET,
   type ProxyCacheMap,
@@ -68,7 +67,6 @@ function makeProxyObjectImpl(
 
   const t = Object.create(null) as Record<string | symbol, unknown>;
 
-  const ownKeys = Object.keys(ownKeysMap);
   let dirty = false;
 
   const proxy = new Proxy<ProxyObject>(t as ProxyObject, {
@@ -83,8 +81,6 @@ function makeProxyObjectImpl(
           return t;
         case PROXY_SYMBOL_BASE:
           return base;
-        case PROXY_SYMBOL_OWN_KEYS:
-          return ownKeys;
         case PROXY_SYMBOL_DIRTY:
           return dirty;
         case PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS:
@@ -203,7 +199,13 @@ function makeProxyObjectImpl(
       return !!ownKeysMap[p];
     },
     // Add '__dirty' field to compare with fresh object resulting not match
-    ownKeys: () => (dirty ? ownKeys.concat('__dirty') : ownKeys),
+    ownKeys: () => {
+      const ownKeys = Object.keys(ownKeysMap);
+      if (dirty) {
+        ownKeys.push('__dirty');
+      }
+      return ownKeys;
+    },
     set: (_, p, newValue: unknown) => {
       if (typeof p === 'symbol') {
         if (p === PROXY_SYMBOL_DIRTY) {
