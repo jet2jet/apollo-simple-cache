@@ -6,11 +6,17 @@
     "npm": ">=9"
   },
   "engineStrict": true,
-  "description": "",
+  "description": "Simple cache features for Apollo Client",
   "author": "jet",
   "license": "MIT",
   "homepage": "https://github.com/jet2jet/apollo-simple-cache",
-  "keywords": [],
+  "keywords": [
+    "cache",
+    "apollo",
+    "apollo-client",
+    "Apollo Client",
+    "graphql"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jet2jet/apollo-simple-cache.git"
