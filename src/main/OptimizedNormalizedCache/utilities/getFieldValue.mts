@@ -1,5 +1,5 @@
 import type { StoreObject } from '@apollo/client';
-import type { FieldNode } from 'graphql';
+import type { ArgumentNode, FieldNode } from 'graphql';
 import type { SupertypeMap } from '../internalTypes.mjs';
 import type {
   DataIdFromObjectFunction,
@@ -16,7 +16,7 @@ import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs
 // @internal
 export default function getFieldValue(
   object: object,
-  field: FieldNode | null,
+  fieldOrArguments: FieldNode | readonly ArgumentNode[] | null,
   name: string,
   supertypeMap: SupertypeMap | undefined,
   optimizedRead: OptimizedReadMap,
@@ -39,7 +39,8 @@ export default function getFieldValue(
   const read =
     (typename && optimizedRead[typename]) ||
     (actualTypename && optimizedRead[actualTypename]);
-  const effectiveArguments = getEffectiveArguments(field, variables) || {};
+  const effectiveArguments =
+    getEffectiveArguments(fieldOrArguments, variables) || {};
   const optimizedReadContext: OptimizedReadContext = {
     checkExistenceOnly: false,
     dataIdFromObject,

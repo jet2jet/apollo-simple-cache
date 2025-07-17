@@ -2,7 +2,7 @@ import type { StoreObject } from '@apollo/client';
 import type { ArgumentNode, SelectionSetNode } from 'graphql';
 import cloneVariables from '../../utilities/cloneVariables.mjs';
 import hasOwn from '../../utilities/hasOwn.mjs';
-import type { FragmentMap } from '../internalTypes.mjs';
+import type { FragmentMap, SelectionTuple } from '../internalTypes.mjs';
 import getActualTypename from '../utilities/getActualTypename.mjs';
 import getCachedSelections from '../utilities/getCachedSelections.mjs';
 import getEffectiveArguments from '../utilities/getEffectiveArguments.mjs';
@@ -83,41 +83,65 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
     const { supertypeMap, optimizedRead, dataIdFromObject, readFromId } =
       baseCache;
 
-    const subSelectionSet: SelectionSetNode[] = [];
-    let incoming: object | undefined;
-    for (const selectionSet of selectionSets) {
-      for (const selection of getCachedSelections(selectionSet, fragmentMap)) {
-        if (selection[0] !== p) {
-          continue;
-        }
-        const fieldNode = selection[1];
-        const val = getFieldValue(
+    const selectionTuple = t[`${p}:s`] as SelectionTuple | SelectionTuple[];
+
+    let incoming: unknown;
+    let subSelections: SelectionSetNode | SelectionSetNode[] | undefined;
+    if (selectionTuple[0] instanceof Array) {
+      for (const tuple of selectionTuple as SelectionTuple[]) {
+        incoming = getFieldValue(
           base,
-          fieldNode,
+          tuple[1],
           p,
           supertypeMap,
           optimizedRead,
           dataIdFromObject,
           readFromId,
-          selection[2],
+          tuple[2],
           variables
         );
-        if (val !== undefined && (val == null || typeof val !== 'object')) {
-          // Cache the value
-          t[p] = val;
-
-          return val;
+        const sub = tuple[1].selectionSet;
+        if (sub) {
+          if (subSelections) {
+            if (subSelections instanceof Array) {
+              subSelections.push(sub);
+            } else {
+              subSelections = [subSelections, sub];
+            }
+          } else {
+            subSelections = sub;
+          }
         }
-        // If no further selection, returns the value without proxying
-        if (!fieldNode.selectionSet) {
-          // Cache the value
-          t[p] = val;
-
-          return val;
-        }
-        incoming = val;
-        subSelectionSet.push(fieldNode.selectionSet);
       }
+    } else {
+      incoming = getFieldValue(
+        base,
+        (selectionTuple as SelectionTuple)[1],
+        p,
+        supertypeMap,
+        optimizedRead,
+        dataIdFromObject,
+        readFromId,
+        (selectionTuple as SelectionTuple)[2],
+        variables
+      );
+      subSelections = (selectionTuple as SelectionTuple)[1].selectionSet;
+    }
+    if (
+      incoming !== undefined &&
+      (incoming == null || typeof incoming !== 'object')
+    ) {
+      // Cache the value
+      t[p] = incoming;
+
+      return incoming;
+    }
+    // If no further selection, returns the value without proxying
+    if (!subSelections) {
+      // Cache the value
+      t[p] = incoming;
+
+      return incoming;
     }
 
     if (incoming === undefined) {
@@ -126,7 +150,10 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
     }
 
     // Create new proxy for sub object
-    const proxy = callMakeProxy(incoming, subSelectionSet);
+    const proxy = callMakeProxy(
+      incoming,
+      subSelections instanceof Array ? subSelections : [subSelections]
+    );
     t[p] = proxy;
     return proxy;
 
@@ -211,6 +238,10 @@ function makeProxyObjectImpl(
   if (typename) {
     ownKeysMap.__typename = true;
   }
+
+  const t = { __proto__: null } as ProxyObject &
+    Record<string | symbol, unknown> & { __proto__: null };
+
   for (const selectionSet of selectionSets) {
     for (const selection of getCachedSelections(selectionSet, fragmentMap)) {
       if (
@@ -220,12 +251,25 @@ function makeProxyObjectImpl(
       ) {
         continue;
       }
-      ownKeysMap[selection[0]] = true;
+      const name = selection[0];
+      ownKeysMap[name] = true;
+
+      const existing = t[`${name}:s`] as
+        | SelectionTuple
+        | SelectionTuple[]
+        | undefined;
+      if (!existing) {
+        t[`${name}:s`] = selection;
+      } else {
+        if (existing[0] instanceof Array) {
+          (existing as SelectionTuple[]).push(selection);
+        } else {
+          t[`${name}:s`] = [existing, selection];
+        }
+      }
     }
   }
 
-  const t = Object.create(null) as ProxyObject &
-    Record<string | symbol, unknown>;
   if (typename) {
     t.__typename = typename;
   }
