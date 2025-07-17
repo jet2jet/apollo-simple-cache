@@ -54,6 +54,7 @@ import evictData from './utilities/evictData.mjs';
 import getFragmentMap from './utilities/getFragmentMap.mjs';
 import getMissingFields from './utilities/getMissingFields.mjs';
 import isWatchingFields from './utilities/isWatchingFields.mjs';
+import isWatchingIdFields from './utilities/isWatchingIdFields.mjs';
 import makeStoreId from './utilities/makeStoreId.mjs';
 import modifyField from './utilities/modifyField.mjs';
 import setFieldValues from './utilities/setFieldValues.mjs';
@@ -760,7 +761,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       const def = getMainDefinition(w.query);
       const map = getFragmentMap(w.query);
       let isWatching = false;
-      for (let m = rootFields.length, j = 0; j < m; ++j) {
+      const m = rootFields.length;
+      for (let j = 0; j < m; ++j) {
         if (
           isWatchingFields(
             this.data.ROOT_QUERY,
@@ -776,6 +778,21 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         ) {
           isWatching = true;
           break;
+        }
+      }
+      if (!isWatching && idFields.length) {
+        if (
+          isWatchingIdFields(
+            this.data.ROOT_QUERY,
+            def.selectionSet,
+            map,
+            idFields,
+            w.variables,
+            this.keyFields,
+            this.supertypeMap
+          )
+        ) {
+          isWatching = true;
         }
       }
 
