@@ -35,7 +35,8 @@ export default function getKeyFields(
     if (!supertypes) {
       return undefined;
     }
-    for (const t of supertypes) {
+    for (let l = supertypes.length, i = 0; i < l; ++i) {
+      const t = supertypes[i]!;
       const r = getKeyFieldsForTypes(t, types);
       if (r) {
         return r;

@@ -33,10 +33,11 @@ interface SetFieldValuesContext {
 }
 
 function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {
-  if (a.length !== b.length) {
+  const l = a.length;
+  if (l !== b.length) {
     return false;
   }
-  for (let i = 0; i < a.length; ++i) {
+  for (let i = 0; i < l; ++i) {
     const aElem = a[i]!;
     const bElem = b[i]!;
     if (typeof aElem === 'string') {
@@ -74,10 +75,10 @@ function mergeObjectWithId(
   existing: unknown,
   incoming: object,
   selectionSet: SelectionSetNode | undefined,
-  currentPath: ChangedFields | undefined,
   context: SetFieldValuesContext
 ): [object, boolean] {
   const rootStore = context.rs;
+  let changed = false;
   if (
     rootStore[id] == null ||
     typeof rootStore[id] !== 'object' ||
@@ -88,16 +89,18 @@ function mergeObjectWithId(
       typeof existing === 'object' &&
       !(existing instanceof Array)
         ? existing
-        : (Object.create(null) as object);
+        : { __proto__: null };
     rootStore[id] = obj;
+    changed = true;
   }
-  return setFieldValuesImpl(
+  const r = setFieldValuesImpl(
     rootStore[id] as object,
     incoming,
     selectionSet,
-    currentPath,
+    [id],
     context
   );
+  return [r[0], changed || r[1]];
 }
 
 /** Return value `changed` only effects on `currentPath != null` */
@@ -122,7 +125,8 @@ function setFieldValuesImpl<T>(
       pushChangedFields(changedFields, currentPath);
       currentPath = undefined;
     }
-    source.forEach((s: unknown, i) => {
+    for (let l = source.length, i = 0; i < l; ++i) {
+      const s = source[i];
       if (s == null || typeof s !== 'object') {
         destArray[i] = s;
       } else {
@@ -133,24 +137,12 @@ function setFieldValuesImpl<T>(
             destArray[i],
             s,
             selectionSet,
-            currentPath,
             context
           );
           if (changed) {
             pushChangedFields(changedFields, currentPath);
           }
-          const newPath: ChangedFields = [id];
-          const [returnValue, changed2] = setFieldValuesImpl(
-            merged,
-            s,
-            selectionSet,
-            newPath,
-            context
-          );
-          if (changed2) {
-            pushChangedFields(changedFields, newPath);
-          }
-          destArray[i] = returnValue;
+          destArray[i] = merged;
         } else {
           const [returnValue, changed2] = setFieldValuesImpl(
             destArray[i],
@@ -165,12 +157,12 @@ function setFieldValuesImpl<T>(
           destArray[i] = returnValue;
         }
       }
-    });
+    }
 
     // if changedFields has many fields, assume the object itself is changed
     if (changedFields.length < 3) {
-      for (const c of changedFields) {
-        pushChangedFields(context.cf, c);
+      for (let l = changedFields.length, i = 0; i < l; ++i) {
+        pushChangedFields(context.cf, changedFields[i]!);
       }
       return [destArray as unknown as T, false];
     } else {
@@ -206,7 +198,7 @@ function setFieldValuesImpl<T>(
     }
   } else {
     // fragmentMap must be non-null when selectionSet is non-null
-    for (const selection of getCachedSelections(selectionSet, context.fm!)) {
+    getCachedSelections(selectionSet, context.fm!).forEach((selection) => {
       const name = selection[0];
       const effectiveArguments = getEffectiveArguments(selection[1], context.v);
       const path = joinCurrentPath(name, effectiveArguments);
@@ -222,13 +214,13 @@ function setFieldValuesImpl<T>(
       ) {
         pushChangedFields(changedFields, path);
       }
-    }
+    });
   }
 
   // if changedFields has many fields, assume the object itself is changed
   if (!changed && changedFields.length < 3) {
-    for (const c of changedFields) {
-      pushChangedFields(context.cf, c);
+    for (let l = changedFields.length, i = 0; i < l; ++i) {
+      pushChangedFields(context.cf, changedFields[i]!);
     }
     return [destination as T, false];
   } else {
@@ -275,7 +267,7 @@ function setFieldValuesImpl<T>(
         : undefined;
     let merged: unknown;
     let existing: unknown;
-    const doMerge = () => {
+    function doMerge() {
       if (id) {
         let changed2: boolean;
         [merged, changed2] = mergeObjectWithId(
@@ -283,16 +275,14 @@ function setFieldValuesImpl<T>(
           existing,
           val as object,
           subSelectionSet,
-          path,
           context
         );
         if (path && changed2) {
           changed = true;
           context.cf.push(path);
         }
-        path = [id];
       }
-    };
+    }
 
     if (effectiveArguments) {
       // Store value for specific arguments
@@ -430,7 +420,7 @@ export default function setFieldValues(
   if (noStoreToRoot) {
     const id = makeStoreId(source, keyFields, supertypeMap);
     if (id) {
-      mergeObjectWithId(id, undefined, source, undefined, [id], context);
+      mergeObjectWithId(id, undefined, source, undefined, context);
     }
   } else {
     setFieldValuesImpl(target, source, selectionSet, [startPathName], context);

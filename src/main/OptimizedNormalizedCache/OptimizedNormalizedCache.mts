@@ -608,7 +608,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     variables: Record<string, unknown> | undefined,
     variableString: string
   ) {
-    for (const missing of this.missingFields) {
+    const mf = this.missingFields;
+    for (let l = mf.length, i = 0; i < l; ++i) {
+      const missing = mf[i]!;
       if (missing[0] === selectionSet && missing[3] === variableString) {
         return missing[4];
       }
@@ -624,7 +626,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       this.queryType,
       variables
     );
-    this.missingFields.push([
+    mf.push([
       selectionSet,
       fragmentMap,
       cloneVariables(variables),
@@ -657,7 +659,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     return impl(this.data.ROOT_QUERY);
 
     function gatherAllObjects(array: unknown[]) {
-      for (const o of array) {
+      for (let l = array.length, i = 0; i < l; ++i) {
+        const o = array[i];
         if (o != null && typeof o === 'object') {
           if (!gathered.has(o)) {
             gathered.add(o);
@@ -698,16 +701,17 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       [[], []]
     );
 
-    for (let i = this.missingFields.length - 1; i >= 0; --i) {
-      const missingField = this.missingFields[i]!;
+    const mf = this.missingFields;
+    for (let i = mf.length - 1; i >= 0; --i) {
+      const missingField = mf[i]!;
       let found = false;
-      for (const field of rootFields) {
+      for (let l = rootFields.length, j = 0; j < l; ++j) {
         if (
           isWatchingFields(
             this.data.ROOT_QUERY,
             missingField[0],
             missingField[1],
-            field,
+            rootFields[j]!,
             idFields,
             1,
             missingField[2],
@@ -720,7 +724,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         }
       }
       if (found) {
-        this.missingFields.splice(i, 1);
+        mf.splice(i, 1);
       }
     }
 
@@ -738,7 +742,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     rootFields: ChangedFieldsArray,
     idFields: ChangedFieldsArray
   ) {
-    for (const data of this.watchers) {
+    for (let wt = this.watchers, l = wt.length, i = 0; i < l; ++i) {
+      const data = wt[i]!;
       if (data[1]) {
         continue;
       }
@@ -755,13 +760,13 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       const def = getMainDefinition(w.query);
       const map = getFragmentMap(w.query);
       let isWatching = false;
-      for (const field of rootFields) {
+      for (let m = rootFields.length, j = 0; j < m; ++j) {
         if (
           isWatchingFields(
             this.data.ROOT_QUERY,
             def.selectionSet,
             map,
-            field,
+            rootFields[j]!,
             idFields,
             1,
             w.variables,
@@ -798,7 +803,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     this.proxyCacheCleanTimer = undefined;
 
     const records = this.revokedProxyRecords.splice(0);
-    for (const [record, parent] of records) {
+    for (let l = records.length, i = 0; i < l; ++i) {
+      const [record, parent] = records[i]!;
       {
         const i = parent.indexOf(record);
         if (i >= 0) {
@@ -844,7 +850,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   }
 
   private broadcastAllWatchers() {
-    for (const watcher of this.watchers) {
+    for (let wt = this.watchers, l = wt.length, i = 0; i < l; ++i) {
+      const watcher = wt[i]!;
       if (!watcher[1]) {
         continue;
       }

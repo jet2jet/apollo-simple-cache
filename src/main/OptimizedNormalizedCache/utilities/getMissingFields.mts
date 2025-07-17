@@ -35,8 +35,9 @@ export default function getMissingFields(
       if (item === undefined) {
         missingFields.push(pathName);
       } else if (item != null && typeof item === 'object') {
-        missingFields.push(
-          ...getMissingFields(
+        Array.prototype.push.apply(
+          missingFields,
+          getMissingFields(
             item,
             selection,
             fragmentMap,
@@ -59,7 +60,14 @@ export default function getMissingFields(
       effectiveArguments: {},
     };
 
-    for (const tuple of getCachedSelections(selection, fragmentMap)) {
+    for (
+      let cs = getCachedSelections(selection, fragmentMap),
+        l = cs.length,
+        i = 0;
+      i < l;
+      ++i
+    ) {
+      const tuple = cs[i]!;
       let actualTypename: string | undefined;
       if (typename && tuple[2]) {
         actualTypename = getActualTypename(typename, tuple[2], supertypeMap);
@@ -110,8 +118,9 @@ export default function getMissingFields(
         typeof value === 'object' &&
         fieldNode.selectionSet
       ) {
-        missingFields.push(
-          ...getMissingFields(
+        Array.prototype.push.apply(
+          missingFields,
+          getMissingFields(
             value,
             fieldNode.selectionSet,
             fragmentMap,

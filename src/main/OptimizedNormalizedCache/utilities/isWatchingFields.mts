@@ -29,7 +29,14 @@ export default function isWatchingFields(
   supertypeMap: SupertypeMap | undefined
 ): boolean {
   const field = fieldList[index];
-  for (const selection of getCachedSelections(selectionSetNode, fragmentMap)) {
+  for (
+    let cs = getCachedSelections(selectionSetNode, fragmentMap),
+      l = cs.length,
+      i = 0;
+    i < l;
+    ++i
+  ) {
+    const selection = cs[i]!;
     const subSelectionSet = selection[1].selectionSet;
     const value = getFieldValue(
       data,

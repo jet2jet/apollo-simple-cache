@@ -42,11 +42,15 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
       case PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS:
         return (fieldName: string) => {
           const fieldArguments: ArgumentNode[] = [];
-          for (const selectionSet of selectionSets) {
-            for (const selection of getCachedSelections(
-              selectionSet,
-              fragmentMap
-            )) {
+          for (let l = selectionSets.length, i = 0; i < l; ++i) {
+            for (
+              let cs = getCachedSelections(selectionSets[i]!, fragmentMap),
+                m = cs.length,
+                j = 0;
+              j < m;
+              ++j
+            ) {
+              const selection = cs[j]!;
               if (selection[0] !== fieldName) {
                 continue;
               }
@@ -88,7 +92,8 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
     let incoming: unknown;
     let subSelections: SelectionSetNode | SelectionSetNode[] | undefined;
     if (selectionTuple[0] instanceof Array) {
-      for (const tuple of selectionTuple as SelectionTuple[]) {
+      for (let l = selectionTuple.length, i = 0; i < l; ++i) {
+        const tuple = (selectionTuple as SelectionTuple[])[i]!;
         incoming = getFieldValue(
           base,
           tuple[1],
@@ -197,7 +202,7 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
   ownKeys: (t) => {
     const ownKeys = t[PROXY_SYMBOL_OWN_KEYS];
     if (t[PROXY_SYMBOL_DIRTY]) {
-      return [...ownKeys, '__dirty'];
+      return ownKeys.concat('__dirty');
     }
     return ownKeys;
   },

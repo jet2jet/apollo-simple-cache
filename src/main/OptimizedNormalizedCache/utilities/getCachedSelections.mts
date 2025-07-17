@@ -26,7 +26,8 @@ function makeSelections(
     selections: readonly SelectionNode[],
     typename?: string | undefined
   ) {
-    for (const selection of selections) {
+    for (let l = selections.length, i = 0; i < l; ++i) {
+      const selection = selections[i]!;
       switch (selection.kind) {
         case Kind.FIELD: {
           const name = selection.name.value;

@@ -13,7 +13,14 @@ export default function makeStoreId(
   if (!typename) {
     return undefined;
   }
-  for (const key of getKeyFields(typename, keyFields, supertypeMap)) {
+  for (
+    let kf = getKeyFields(typename, keyFields, supertypeMap),
+      l = kf.length,
+      i = 0;
+    i < l;
+    ++i
+  ) {
+    const key = kf[i]!;
     if (key in data) {
       return `${typename}:${(data as Record<string, string | number>)[key]}`;
     }
