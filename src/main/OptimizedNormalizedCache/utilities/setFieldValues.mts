@@ -1,12 +1,15 @@
 import type { StoreObject } from '@apollo/client';
 import type { FieldNode, SelectionSetNode } from 'graphql';
 import equal from '../../utilities/equal.mjs';
-import type {
-  ChangedFields,
-  ChangedFieldsArray,
-  FragmentMap,
-  SupertypeMap,
+import {
+  SYMBOL_PROXY_ARRAY,
+  type ChangedFields,
+  type ChangedFieldsArray,
+  type DataStoreObject,
+  type FragmentMap,
+  type SupertypeMap,
 } from '../internalTypes.mjs';
+import { PROXY_SYMBOL_DIRTY } from '../proxyObjects/types.mjs';
 import type { KeyFields, WriteToCacheMap } from '../types.mjs';
 import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
@@ -30,6 +33,27 @@ interface SetFieldValuesContext {
   cf: ChangedFieldsArray;
   /** variables */
   v: Record<string, unknown> | undefined;
+}
+
+function markProxyDirty(object: DataStoreObject) {
+  const rec = object[SYMBOL_PROXY_ARRAY];
+  if (rec) {
+    for (let l = rec.length, i = 0; i < l; ++i) {
+      rec[i]![PROXY_SYMBOL_DIRTY] = true;
+    }
+    rec.splice(0);
+  }
+}
+
+function releaseDataStoreObject(object: DataStoreObject) {
+  markProxyDirty(object);
+
+  for (const key in object) {
+    const o = object[key];
+    if (o && typeof o === 'object') {
+      releaseDataStoreObject(o as DataStoreObject);
+    }
+  }
 }
 
 function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {
@@ -84,12 +108,12 @@ function mergeObjectWithId(
     typeof rootStore[id] !== 'object' ||
     rootStore[id] instanceof Array
   ) {
-    const obj =
+    const obj: DataStoreObject =
       existing != null &&
       typeof existing === 'object' &&
       !(existing instanceof Array)
-        ? existing
-        : { __proto__: null };
+        ? (existing as DataStoreObject)
+        : { __proto__: null, [SYMBOL_PROXY_ARRAY]: [] };
     rootStore[id] = obj;
     changed = true;
   }
@@ -126,6 +150,7 @@ function setFieldValuesImpl<T>(
       currentPath = undefined;
     }
     for (let l = source.length, i = 0; i < l; ++i) {
+      const e = destArray[i];
       const s = source[i];
       if (s == null || typeof s !== 'object') {
         destArray[i] = s;
@@ -134,7 +159,7 @@ function setFieldValuesImpl<T>(
         if (id) {
           const [merged, changed] = mergeObjectWithId(
             id,
-            destArray[i],
+            e,
             s,
             selectionSet,
             context
@@ -145,7 +170,7 @@ function setFieldValuesImpl<T>(
           destArray[i] = merged;
         } else {
           const [returnValue, changed2] = setFieldValuesImpl(
-            destArray[i],
+            e,
             s,
             selectionSet,
             currentPath,
@@ -155,6 +180,11 @@ function setFieldValuesImpl<T>(
             pushChangedFields(changedFields, currentPath);
           }
           destArray[i] = returnValue;
+        }
+      }
+      if (destArray[i] !== e) {
+        if (e && typeof e === 'object') {
+          releaseDataStoreObject(e as DataStoreObject);
         }
       }
     }
@@ -170,12 +200,15 @@ function setFieldValuesImpl<T>(
     }
   }
 
-  let destination: Record<string, unknown>;
+  let destination: DataStoreObject;
   let changed = false;
   if (target != null && typeof target === 'object') {
-    destination = target as Record<string, unknown>;
+    destination = target as Record<string, unknown> as DataStoreObject;
+    if (!destination[SYMBOL_PROXY_ARRAY]) {
+      destination[SYMBOL_PROXY_ARRAY] = [];
+    }
   } else {
-    destination = Object.create(null) as Record<string, unknown>;
+    destination = { __proto__: null, [SYMBOL_PROXY_ARRAY]: [] };
     changed = true;
     // Set undefined to avoid adding child paths
     currentPath = undefined;
@@ -295,18 +328,23 @@ function setFieldValuesImpl<T>(
         existing = record[1];
         doMerge();
         if (merged !== undefined) {
-          changed = record[1] !== merged;
+          changed = existing !== merged;
           record[1] = merged;
         } else {
           let changed2: boolean;
           [record[1], changed2] = setFieldValuesImpl(
-            record[1],
+            existing,
             val,
             subSelectionSet,
             path,
             context
           );
           changed ||= changed2;
+        }
+        if (existing !== record[1]) {
+          if (existing && typeof existing === 'object') {
+            releaseDataStoreObject(existing as DataStoreObject);
+          }
         }
       } else {
         doMerge();
@@ -334,7 +372,7 @@ function setFieldValuesImpl<T>(
       } else {
         let changed2: boolean;
         [destination[name], changed2] = setFieldValuesImpl(
-          destination[name],
+          existing as DataStoreObject | undefined,
           val,
           subSelectionSet,
           path,
@@ -342,6 +380,14 @@ function setFieldValuesImpl<T>(
         );
         changed ||= changed2;
       }
+      if (destination[name] !== existing) {
+        if (existing && typeof existing === 'object') {
+          releaseDataStoreObject(existing as DataStoreObject);
+        }
+      }
+    }
+    if (changed) {
+      markProxyDirty(destination);
     }
     return changed;
   }
@@ -359,7 +405,7 @@ function setFieldValuesImpl<T>(
 // @internal
 export default function setFieldValues(
   rootStore: Record<string, unknown>,
-  target: Record<string, unknown>,
+  target: DataStoreObject,
   source: unknown,
   selectionSet: undefined,
   fragmentMap: undefined,
@@ -374,7 +420,7 @@ export default function setFieldValues(
 // @internal
 export default function setFieldValues(
   rootStore: Record<string, unknown>,
-  target: Record<string, unknown>,
+  target: DataStoreObject,
   source: unknown,
   selectionSet: SelectionSetNode,
   fragmentMap: FragmentMap,
@@ -390,7 +436,7 @@ export default function setFieldValues(
 // @internal
 export default function setFieldValues(
   rootStore: Record<string, unknown>,
-  target: Record<string, unknown>,
+  target: DataStoreObject,
   source: unknown,
   selectionSet: SelectionSetNode | undefined,
   fragmentMap: FragmentMap | undefined,

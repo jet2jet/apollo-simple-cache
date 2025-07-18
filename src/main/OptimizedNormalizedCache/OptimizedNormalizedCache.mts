@@ -24,15 +24,16 @@ import cloneVariables from '../utilities/cloneVariables.mjs';
 import getMainDefinition from '../utilities/getMainDefinition.mjs';
 import hasOwn from '../utilities/hasOwn.mjs';
 import variablesToString from '../utilities/variablesToString.mjs';
-import type {
-  ChangedFieldsArray,
-  FragmentMap,
-  MissingFieldRecord,
-  SupertypeMap,
+import {
+  SYMBOL_PROXY_ARRAY,
+  type ChangedFieldsArray,
+  type DataStoreObject,
+  type FragmentMap,
+  type MissingFieldRecord,
+  type SupertypeMap,
 } from './internalTypes.mjs';
 import isProxyObject from './proxyObjects/isProxyObject.mjs';
 import makeProxyObject from './proxyObjects/makeProxyObject.mjs';
-import releaseProxyRecords from './proxyObjects/releaseProxyRecords.mjs';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_DIRTY,
@@ -54,7 +55,6 @@ import evictData from './utilities/evictData.mjs';
 import getFragmentMap from './utilities/getFragmentMap.mjs';
 import getMissingFields from './utilities/getMissingFields.mjs';
 import isWatchingFields from './utilities/isWatchingFields.mjs';
-import isWatchingIdFields from './utilities/isWatchingIdFields.mjs';
 import makeStoreId from './utilities/makeStoreId.mjs';
 import modifyField from './utilities/modifyField.mjs';
 import setFieldValues from './utilities/setFieldValues.mjs';
@@ -67,22 +67,27 @@ type AnyVariable = any;
 type WatcherData = [options: Cache.WatchOptions<object>, revoked: boolean];
 
 function makeNewData(queryType: string, mutationType: string) {
-  return Object.assign(Object.create(null) as object, {
-    ROOT_QUERY: Object.assign(Object.create(null) as object, {
+  return {
+    __proto__: null,
+    ROOT_QUERY: {
+      __proto__: null,
       __typename: queryType,
-    }),
-    ROOT_MUTATION: Object.assign(Object.create(null) as object, {
+      [SYMBOL_PROXY_ARRAY]: [],
+    },
+    ROOT_MUTATION: {
+      __proto__: null,
       __typename: mutationType,
-    }),
-  });
+      [SYMBOL_PROXY_ARRAY]: [],
+    },
+  };
 }
 
 export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCacheObject> {
   public readonly assumeImmutableResults = true;
 
   private data: Record<string, unknown> & {
-    ROOT_QUERY: Record<string, unknown>;
-    ROOT_MUTATION: Record<string, unknown>;
+    ROOT_QUERY: DataStoreObject;
+    ROOT_MUTATION: DataStoreObject;
   };
 
   // @internal
@@ -723,13 +728,16 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     fragmentMap: FragmentMap,
     variables: unknown,
     variablesString: string
-  ): ProxyObject | null {
+  ): unknown {
     const o = this.data[id];
     if (!o) {
       return null;
     }
+    if (typeof o !== 'object') {
+      return o;
+    }
     return makeProxyObject(
-      o,
+      o as DataStoreObject,
       [selectionSet],
       id,
       variables,
@@ -814,20 +822,10 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       }
     }
 
-    releaseProxyRecords(
-      this.proxyCacheMap,
-      this.proxyCacheRecords,
-      rootFields,
-      idFields
-    );
-
-    this.releaseProxyForWatchers(rootFields, idFields);
+    this.releaseProxyForWatchers();
   }
 
-  private releaseProxyForWatchers(
-    rootFields: ChangedFieldsArray,
-    idFields: ChangedFieldsArray
-  ) {
+  private releaseProxyForWatchers() {
     for (let wt = this.watchers, l = wt.length, i = 0; i < l; ++i) {
       const data = wt[i]!;
       if (data[1]) {
@@ -843,46 +841,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         continue;
       }
 
-      const def = getMainDefinition(w.query);
-      const map = getFragmentMap(w.query);
-      let isWatching = false;
-      const m = rootFields.length;
-      for (let j = 0; j < m; ++j) {
-        if (
-          isWatchingFields(
-            this.data.ROOT_QUERY,
-            def.selectionSet,
-            map,
-            rootFields[j]!,
-            idFields,
-            1,
-            w.variables,
-            this.keyFields,
-            this.supertypeMap
-          )
-        ) {
-          isWatching = true;
-          break;
-        }
-      }
-      if (!isWatching && idFields.length) {
-        if (
-          isWatchingIdFields(
-            this.data.ROOT_QUERY,
-            def.selectionSet,
-            map,
-            idFields,
-            w.variables,
-            this.keyFields,
-            this.supertypeMap
-          )
-        ) {
-          isWatching = true;
-        }
-      }
-
-      if (isWatching) {
-        proxy[PROXY_SYMBOL_DIRTY] = true;
+      if (proxy[PROXY_SYMBOL_DIRTY]) {
         data[1] = true;
       }
     }

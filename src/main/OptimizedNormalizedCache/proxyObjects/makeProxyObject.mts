@@ -2,7 +2,12 @@ import type { StoreObject } from '@apollo/client';
 import type { ArgumentNode, SelectionSetNode } from 'graphql';
 import cloneVariables from '../../utilities/cloneVariables.mjs';
 import hasOwn from '../../utilities/hasOwn.mjs';
-import type { FragmentMap, SelectionTuple } from '../internalTypes.mjs';
+import {
+  SYMBOL_PROXY_ARRAY,
+  type DataStoreObject,
+  type FragmentMap,
+  type SelectionTuple,
+} from '../internalTypes.mjs';
 import getActualTypename from '../utilities/getActualTypename.mjs';
 import getCachedSelections from '../utilities/getCachedSelections.mjs';
 import getEffectiveArguments from '../utilities/getEffectiveArguments.mjs';
@@ -24,12 +29,26 @@ import {
   type ProxyObject,
 } from './types.mjs';
 
+function isDirtyObject(val: unknown) {
+  if (!val || typeof val !== 'object') {
+    return false;
+  }
+  if (val instanceof Array) {
+    return val.some(isDirtyObject);
+  }
+  return !!(val as ProxyObject)[PROXY_SYMBOL_DIRTY];
+}
+
 const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
   __proto__: null,
   get: (t, p) => {
     // If already cached, return it
     if (hasOwn(t, p)) {
-      return t[p];
+      const val = t[p];
+      // If dirty, recreates proxy
+      if (!isDirtyObject(val)) {
+        return val;
+      }
     }
 
     const selectionSets = t[PROXY_SYMBOL_SELECTION_SETS];
@@ -175,7 +194,7 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
         );
       }
       return makeProxyObjectImpl(
-        incoming,
+        incoming as DataStoreObject,
         subSelectionSet,
         variables,
         variablesString,
@@ -228,7 +247,7 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
 };
 
 function makeProxyObjectImpl(
-  base: object,
+  base: DataStoreObject,
   selectionSets: readonly SelectionSetNode[],
   variables: unknown,
   variablesString: string,
@@ -305,12 +324,15 @@ function makeProxyObjectImpl(
 
   const proxy = new Proxy<ProxyObject>(t, proxyHandler);
 
+  const rec = base[SYMBOL_PROXY_ARRAY] || (base[SYMBOL_PROXY_ARRAY] = []);
+  rec.push(proxy);
+
   return proxy;
 }
 
 // @internal
 export default function makeProxyObject(
-  base: object,
+  base: DataStoreObject,
   selectionSets: readonly SelectionSetNode[],
   id: string | undefined,
   variables: unknown,

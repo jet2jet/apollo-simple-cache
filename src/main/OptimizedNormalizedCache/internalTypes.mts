@@ -1,8 +1,10 @@
+import type { StoreValue } from '@apollo/client';
 import type {
   FieldNode,
   FragmentDefinitionNode,
   SelectionSetNode,
 } from 'graphql';
+import type { ProxyObject } from './proxyObjects/types.mjs';
 
 // @internal
 export type FragmentMap = Record<string, FragmentDefinitionNode>;
@@ -50,3 +52,12 @@ export type MissingFieldRecord = [
   variablesString: string,
   missing: string[],
 ];
+
+// @internal
+export const SYMBOL_PROXY_ARRAY = Symbol('smc:proxies');
+
+// @internal
+export type DataStoreObject = {
+  [key: string]: StoreValue | DataStoreObject;
+  [SYMBOL_PROXY_ARRAY]: ProxyObject[];
+};
