@@ -215,16 +215,31 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     const fragmentMap = getFragmentMap(query.query);
     const variableString = variablesToString(query.variables);
 
+    let typename: string;
+    if (definition.kind === Kind.OPERATION_DEFINITION) {
+      typename =
+        definition.operation === OperationTypeNode.MUTATION
+          ? this.mutationType
+          : this.queryType;
+    } else {
+      typename = definition.typeCondition.name.value;
+    }
+
+    const dataId = query.id || query.rootId || 'ROOT_QUERY';
+
     if (query.returnPartialData) {
       return this.getProxy(
+        dataId,
         definition.selectionSet,
         fragmentMap,
         query.variables,
         variableString
-      ) as Unmasked<TData>;
+      ) as Unmasked<TData> | null;
     }
     if (
       this.getMissingFields(
+        dataId,
+        typename,
         definition.selectionSet,
         fragmentMap,
         query.variables as Record<string, unknown> | undefined,
@@ -234,20 +249,17 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       return null;
     }
     return this.getProxy(
+      dataId,
       definition.selectionSet,
       fragmentMap,
       query.variables,
       variableString
-    ) as Unmasked<TData>;
+    ) as Unmasked<TData> | null;
   }
 
   public override write<TData = AnyData, TVariables = AnyVariable>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
-    if (hasOwn(write, 'dataId') && write.dataId === undefined) {
-      return undefined;
-    }
-
     const definition = getMainDefinition(write.query);
     const fragmentMap = getFragmentMap(write.query);
     const source = write.result;
@@ -257,19 +269,42 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       return undefined;
     }
 
-    let rootId = 'ROOT_QUERY';
-    if (definition.kind === Kind.OPERATION_DEFINITION) {
-      if (definition.operation === OperationTypeNode.QUERY) {
-        // do nothing
-      } else if (definition.operation === OperationTypeNode.MUTATION) {
-        rootId = 'ROOT_MUTATION;';
-      } else {
-        throw new Error('Subscription not supported');
+    let typename: string;
+    if (source && typeof source === 'object' && '__typename' in source) {
+      typename = source.__typename as string;
+    } else if (definition.kind === Kind.OPERATION_DEFINITION) {
+      typename =
+        definition.operation === OperationTypeNode.MUTATION
+          ? this.mutationType
+          : this.queryType;
+    } else {
+      typename = definition.typeCondition.name.value;
+    }
+
+    let dataId = write.dataId;
+    if (!dataId) {
+      switch (typename) {
+        case this.queryType:
+          dataId = 'ROOT_QUERY';
+          break;
+        case this.mutationType:
+          dataId = 'ROOT_MUTATION';
+          break;
+        default:
+          dataId = makeStoreId(
+            source as object,
+            this.keyFields,
+            this.supertypeMap
+          );
+          if (!dataId) {
+            return undefined;
+          }
+          break;
       }
     }
 
     if (isProxyObject(source)) {
-      return { __ref: rootId };
+      return { __ref: dataId };
     }
 
     const changedFields: ChangedFieldsArray = [];
@@ -283,8 +318,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         return undefined;
       }
 
-      const id = write.dataId || rootId;
-      const target = this.data[id] || (this.data[id] = Object.create(null));
+      const target =
+        this.data[dataId] || (this.data[dataId] = Object.create(null));
       setFieldValues(
         this.data,
         target,
@@ -294,13 +329,13 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         this.keyFields,
         this.supertypeMap,
         this.writeToCacheMap,
-        id,
+        dataId,
         changedFields,
         write.variables as Record<string, unknown> | undefined,
         false
       );
 
-      return { __ref: id };
+      return { __ref: dataId };
     } finally {
       this.updateProxiesAndMissingFields(changedFields);
 
@@ -314,7 +349,22 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     const definition = getMainDefinition(query.query);
     const fragmentMap = getFragmentMap(query.query);
     const variableString = variablesToString(query.variables);
+
+    let typename: string;
+    if (definition.kind === Kind.OPERATION_DEFINITION) {
+      typename =
+        definition.operation === OperationTypeNode.MUTATION
+          ? this.mutationType
+          : this.queryType;
+    } else {
+      typename = definition.typeCondition.name.value;
+    }
+
+    const dataId = query.id || 'ROOT_QUERY';
+
     const missing = this.getMissingFields(
+      dataId,
+      typename,
       definition.selectionSet,
       fragmentMap,
       query.variables as Record<string, unknown> | undefined,
@@ -323,15 +373,16 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
 
     if (query.returnPartialData !== false) {
       const proxy = this.getProxy(
+        dataId,
         definition.selectionSet,
         fragmentMap,
         query.variables,
         variableString
-      );
+      ) as T | null;
       if (missing.length > 0) {
         return {
           complete: false,
-          result: proxy as T,
+          result: proxy || undefined,
           missing: [
             new MissingFieldError(
               `Missing fields: ${missing.join(',')}`,
@@ -341,10 +392,22 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
             ),
           ],
         };
+      } else if (!proxy) {
+        return {
+          complete: false,
+          missing: [
+            new MissingFieldError(
+              `Missing fields: ${dataId}`,
+              [dataId],
+              query.query,
+              query.variables
+            ),
+          ],
+        };
       } else {
         return {
           complete: true,
-          result: proxy as T,
+          result: proxy,
         };
       }
     }
@@ -357,14 +420,29 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         query.variables
       );
     } else {
+      const proxy = this.getProxy(
+        dataId,
+        definition.selectionSet,
+        fragmentMap,
+        query.variables,
+        variableString
+      ) as T | null;
+      if (!proxy) {
+        return {
+          complete: false,
+          missing: [
+            new MissingFieldError(
+              `Missing fields: ${dataId}`,
+              [dataId],
+              query.query,
+              query.variables
+            ),
+          ],
+        };
+      }
       return {
         complete: true,
-        result: this.getProxy(
-          definition.selectionSet,
-          fragmentMap,
-          query.variables,
-          variableString
-        ) as T,
+        result: proxy,
       };
     }
   }
@@ -604,6 +682,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   }
 
   private getMissingFields(
+    id: string,
+    typename: string,
     selectionSet: SelectionSetNode,
     fragmentMap: FragmentMap,
     variables: Record<string, unknown> | undefined,
@@ -617,14 +697,14 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       }
     }
     const missing = getMissingFields(
-      this.data.ROOT_QUERY,
+      this.data[id] as object | null | undefined,
       selectionSet,
       fragmentMap,
       this.supertypeMap,
       this.optimizedRead,
       this.dataIdFromObject,
       this.readFromId,
-      this.queryType,
+      typename,
       variables
     );
     mf.push([
@@ -638,15 +718,20 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   }
 
   private getProxy(
+    id: string,
     selectionSet: SelectionSetNode,
     fragmentMap: FragmentMap,
     variables: unknown,
     variablesString: string
-  ): ProxyObject {
+  ): ProxyObject | null {
+    const o = this.data[id];
+    if (!o) {
+      return null;
+    }
     return makeProxyObject(
-      this.data.ROOT_QUERY,
+      o,
       [selectionSet],
-      'ROOT_QUERY',
+      id,
       variables,
       variablesString,
       fragmentMap,

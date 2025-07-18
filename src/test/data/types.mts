@@ -1,7 +1,18 @@
 export interface LocationType {
-  __typename: 'Location';
+  id: number;
+}
+
+export interface PrefectureType extends LocationType {
+  __typename: 'Prefecture';
   id: number;
   name: string;
+}
+
+export interface CityType extends LocationType {
+  __typename: 'City';
+  id: number;
+  name: string;
+  prefecture: PrefectureType;
 }
 
 export interface TagType {

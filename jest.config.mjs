@@ -22,5 +22,7 @@ export default {
     '^@/(.*)$': '<rootDir>/src/main/$1',
     '(.+)\\.mjs': '$1',
   },
-  globals: {},
+  globals: {
+    __DEV__: true,
+  },
 };

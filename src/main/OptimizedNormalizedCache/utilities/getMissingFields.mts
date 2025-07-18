@@ -16,7 +16,7 @@ import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs
 /** Picks missing fields from current data object. */
 // @internal
 export default function getMissingFields(
-  currentData: object,
+  currentData: object | null | undefined,
   selection: SelectionSetNode,
   fragmentMap: FragmentMap,
   supertypeMap: SupertypeMap | undefined,
@@ -27,6 +27,9 @@ export default function getMissingFields(
   variables: Record<string, unknown> | undefined,
   currentPath = ''
 ): string[] {
+  if (!currentData) {
+    return [currentPath];
+  }
   const missingFields: string[] = [];
 
   if (currentData instanceof Array) {
@@ -109,7 +112,9 @@ export default function getMissingFields(
         baseValue = (currentData as Record<string, unknown>)[name];
         value = !read ? baseValue : read(name, baseValue, optimizedReadContext);
         if (value === undefined) {
-          missingFields.push(pathName);
+          if (!tuple[2] || actualTypename === tuple[2]) {
+            missingFields.push(pathName);
+          }
         }
       }
 

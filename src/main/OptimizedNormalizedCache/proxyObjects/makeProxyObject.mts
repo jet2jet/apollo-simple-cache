@@ -257,6 +257,22 @@ function makeProxyObjectImpl(
         continue;
       }
       const name = selection[0];
+
+      const value = getFieldValue(
+        base,
+        selection[1],
+        name,
+        cache.supertypeMap,
+        cache.optimizedRead,
+        cache.dataIdFromObject,
+        cache.readFromId,
+        selection[2],
+        variables as Record<string, unknown> | undefined
+      );
+      if (value === undefined) {
+        continue;
+      }
+
       ownKeysMap[name] = true;
 
       const existing = t[`${name}:s`] as

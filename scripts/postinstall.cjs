@@ -30,6 +30,11 @@ try {
       require: './utilities/utilities.cjs',
       types: './utilities/index.d.ts',
     },
+    './dev': {
+      import: './dev/index.js',
+      require: './dev/dev.cjs',
+      types: './dev/index.d.ts',
+    },
   };
   fs.writeFileSync(
     apolloPackageJsonPath,

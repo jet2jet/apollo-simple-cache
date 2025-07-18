@@ -1,4 +1,8 @@
-import { gql, type TypedDocumentNode } from '@apollo/client';
+import {
+  gql,
+  type PossibleTypesMap,
+  type TypedDocumentNode,
+} from '@apollo/client';
 import type {
   LocationInputType,
   PersonInputType,
@@ -18,6 +22,23 @@ export type LocationNamesQuery = Pick<
   '__typename' | 'locationNames'
 >;
 
+export type PersonFragment = Pick<
+  PersonType,
+  '__typename' | 'id' | 'name' | 'address'
+>;
+export interface PersonsQueryWithFragment {
+  readonly __typename: QueryType['__typename'];
+  readonly persons: ReadonlyArray<
+    Pick<PersonType, 'id' | 'sha256' | 'tags'> & PersonFragment
+  >;
+}
+export interface PersonQueryWithFragment {
+  readonly __typename: QueryType['__typename'];
+  readonly person:
+    | (Pick<PersonType, 'id' | 'sha256' | 'tags'> & PersonFragment)
+    | null;
+}
+
 export const PersonsDocument = gql`
   query Persons {
     persons {
@@ -29,7 +50,16 @@ export const PersonsDocument = gql`
       }
       address {
         id
-        name
+        ... on Prefecture {
+          name
+        }
+        ... on City {
+          name
+          prefecture {
+            id
+            name
+          }
+        }
       }
     }
   }
@@ -46,7 +76,16 @@ export const PersonDocument = gql`
       }
       address {
         id
-        name
+        ... on Prefecture {
+          name
+        }
+        ... on City {
+          name
+          prefecture {
+            id
+            name
+          }
+        }
       }
     }
   }
@@ -65,7 +104,16 @@ export const LocationsDocument = gql`
   query Locations {
     locations {
       id
-      name
+      ... on Prefecture {
+        name
+      }
+      ... on City {
+        name
+        prefecture {
+          id
+          name
+        }
+      }
     }
   }
 ` as unknown as TypedDocumentNode<LocationsQuery, never>;
@@ -74,7 +122,16 @@ export const LocationDocument = gql`
   query Location($id: ID!) {
     location(id: $id) {
       id
-      name
+      ... on Prefecture {
+        name
+      }
+      ... on City {
+        name
+        prefecture {
+          id
+          name
+        }
+      }
     }
   }
 ` as unknown as TypedDocumentNode<LocationQuery, LocationInputType>;
@@ -84,3 +141,55 @@ export const LocationNamesDocument = gql`
     locationNames
   }
 ` as unknown as TypedDocumentNode<LocationNamesQuery, never>;
+
+export const PersonChunkFragment = gql`
+  fragment PersonChunk on Person {
+    id
+    name
+    address {
+      id
+      ... on Prefecture {
+        name
+      }
+      ... on City {
+        name
+        prefecture {
+          id
+          name
+        }
+      }
+    }
+  }
+` as unknown as TypedDocumentNode<PersonFragment, never>;
+
+export const PersonsDocumentWithFragment = gql`
+  query Persons {
+    persons {
+      id
+      sha256
+      tags {
+        name
+      }
+      ...PersonChunk
+    }
+  }
+  ${PersonChunkFragment}
+` as unknown as TypedDocumentNode<PersonsQueryWithFragment, never>;
+
+export const PersonDocumentWithFragment = gql`
+  query Person($id: ID!) {
+    person(id: $id) {
+      id
+      sha256
+      tags {
+        name
+      }
+      ...PersonChunk
+    }
+  }
+  ${PersonChunkFragment}
+` as unknown as TypedDocumentNode<PersonQueryWithFragment, PersonInputType>;
+
+export const possibleTypes: PossibleTypesMap = {
+  Location: ['Prefecture', 'City'],
+};

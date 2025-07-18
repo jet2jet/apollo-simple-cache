@@ -6,15 +6,35 @@ import {
   GraphQLString,
   GraphQLList,
   type GraphQLFieldConfig,
+  GraphQLInterfaceType,
 } from 'graphql';
 import { locationsData, personsData } from './dummyData.mjs';
 import type { LocationType, PersonType, QueryType } from './types.mjs';
 
-const LocationType = new GraphQLObjectType({
+const LocationType = new GraphQLInterfaceType({
   name: 'Location',
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+  },
+});
+
+const PrefectureType = new GraphQLObjectType({
+  name: 'Prefecture',
+  interfaces: [LocationType],
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: new GraphQLNonNull(GraphQLString) },
+  },
+});
+
+// @ts-expect-error: currently unused
+const CityType = new GraphQLObjectType({
+  name: 'City',
+  interfaces: [LocationType],
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    prefecture: { type: new GraphQLNonNull(PrefectureType) },
   },
 });
 
@@ -86,7 +106,9 @@ const QueryType = new GraphQLObjectType({
         new GraphQLList(new GraphQLNonNull(GraphQLString))
       ),
       resolve: (): readonly string[] => {
-        return locationsData.map((l) => l.name);
+        return locationsData
+          .map((l) => ('name' in l ? (l.name as string) : null))
+          .filter((x) => x != null);
       },
     },
   } satisfies Record<

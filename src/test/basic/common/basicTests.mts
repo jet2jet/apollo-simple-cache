@@ -20,11 +20,14 @@ import { locationsData, personsData } from '../../data/dummyData.mjs';
 import {
   LocationNamesDocument,
   LocationsDocument,
+  PersonChunkFragment,
   PersonDocument,
+  type PersonFragment,
   PersonsDocument,
   PersonSimpleDocument,
   type PersonQuery,
   type PersonsQuery,
+  PersonDocumentWithFragment,
 } from '../../data/simpleQueries.mjs';
 import type { PersonType } from '../../data/types.mjs';
 
@@ -45,7 +48,9 @@ export function registerTests(
       LocationNamesDocument
     ) as typeof LocationNamesDocument;
 
-    const locationNames = locationsData.map((l) => l.name);
+    const locationNames = locationsData
+      .map((l) => ('name' in l ? (l.name as string) : null))
+      .filter((x) => x != null);
 
     cache.writeQuery({
       query: personsDocument,
@@ -569,4 +574,99 @@ export function registerTests(
       })
     ).toThrow(MissingFieldError);
   });
+
+  test('write and read query with fragment', () => {
+    const cache = makeCache();
+
+    const personDocumentWithFragment = cache.transformDocument(
+      PersonDocumentWithFragment
+    ) as typeof PersonDocumentWithFragment;
+
+    const person = personsData[0]!;
+
+    cache.writeQuery({
+      query: personDocumentWithFragment,
+      data: {
+        __typename: 'Query',
+        person,
+      },
+      variables: {
+        id: person.id,
+      },
+    });
+
+    const q1 = cache.readQuery({
+      query: personDocumentWithFragment,
+      variables: {
+        id: person.id,
+      },
+    });
+    expect(q1).toEqual(
+      expect.objectContaining({
+        person,
+      })
+    );
+  });
+
+  if (cacheType === 'normalized') {
+    test('write and read fragment', () => {
+      const cache = makeCache();
+
+      const personChunkFragment = cache.transformDocument(
+        PersonChunkFragment
+      ) as typeof PersonChunkFragment;
+
+      const person = personsData[0]!;
+
+      cache.writeFragment({
+        fragment: personChunkFragment,
+        data: person,
+      });
+
+      const q1 = cache.readFragment({
+        fragment: personChunkFragment,
+        id: cache.identify(person),
+      });
+      expect(q1).toEqual<PersonFragment>({
+        __typename: 'Person',
+        id: person.id,
+        name: person.name,
+        address: person.address,
+      });
+    });
+    test('write query and read fragment', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+      const personChunkFragment = cache.transformDocument(
+        PersonChunkFragment
+      ) as typeof PersonChunkFragment;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        data: {
+          __typename: 'Query',
+          person,
+        },
+        variables: {
+          id: person.id,
+        },
+      });
+
+      const q1 = cache.readFragment({
+        fragment: personChunkFragment,
+        id: cache.identify(person),
+      });
+      expect(q1).toEqual<PersonFragment>({
+        __typename: 'Person',
+        id: person.id,
+        name: person.name,
+        address: person.address,
+      });
+    });
+  }
 }
