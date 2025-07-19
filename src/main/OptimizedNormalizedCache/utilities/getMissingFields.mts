@@ -38,21 +38,21 @@ export default function getMissingFields(
       if (item === undefined) {
         missingFields.push(pathName);
       } else if (item != null && typeof item === 'object') {
-        Array.prototype.push.apply(
-          missingFields,
-          getMissingFields(
-            item,
-            selection,
-            fragmentMap,
-            supertypeMap,
-            optimizedRead,
-            dataIdFromObject,
-            readFromId,
-            (item as StoreObject).__typename,
-            variables,
-            pathName
-          )
+        const childMissingFields = getMissingFields(
+          item,
+          selection,
+          fragmentMap,
+          supertypeMap,
+          optimizedRead,
+          dataIdFromObject,
+          readFromId,
+          (item as StoreObject).__typename,
+          variables,
+          pathName
         );
+        if (childMissingFields.length > 0) {
+          Array.prototype.push.apply(missingFields, childMissingFields);
+        }
       }
     });
   } else {
@@ -85,14 +85,13 @@ export default function getMissingFields(
         (typename && optimizedRead[typename]) ||
         (actualTypename && optimizedRead[actualTypename]);
       const pathName = joinCurrentPath(name);
-      const effectiveArguments =
-        getEffectiveArguments(fieldNode, variables) || {};
-      optimizedReadContext.effectiveArguments = effectiveArguments;
+      const effectiveArguments = getEffectiveArguments(fieldNode, variables);
+      optimizedReadContext.effectiveArguments = effectiveArguments || {};
 
       let value: unknown;
       let baseValue: unknown;
 
-      if (variables) {
+      if (effectiveArguments) {
         const fieldWithArguments = getFieldWithArguments(currentData, name);
         if (fieldWithArguments) {
           const record = pickRecordOfFieldWithArguments(
@@ -123,21 +122,21 @@ export default function getMissingFields(
         typeof value === 'object' &&
         fieldNode.selectionSet
       ) {
-        Array.prototype.push.apply(
-          missingFields,
-          getMissingFields(
-            value,
-            fieldNode.selectionSet,
-            fragmentMap,
-            supertypeMap,
-            optimizedRead,
-            dataIdFromObject,
-            readFromId,
-            (value as StoreObject).__typename,
-            variables,
-            pathName
-          )
+        const childMissingFields = getMissingFields(
+          value,
+          fieldNode.selectionSet,
+          fragmentMap,
+          supertypeMap,
+          optimizedRead,
+          dataIdFromObject,
+          readFromId,
+          (value as StoreObject).__typename,
+          variables,
+          pathName
         );
+        if (childMissingFields.length > 0) {
+          Array.prototype.push.apply(missingFields, childMissingFields);
+        }
       }
     }
   }
