@@ -1,4 +1,4 @@
-import type { StoreObject } from '@apollo/client';
+import { isReference, type Reference, type StoreObject } from '@apollo/client';
 import type { ArgumentNode, SelectionSetNode } from 'graphql';
 import cloneVariables from '../../utilities/cloneVariables.mjs';
 import hasOwn from '../../utilities/hasOwn.mjs';
@@ -193,6 +193,10 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
             : v
         );
       }
+      if (isReference(incoming)) {
+        const id = incoming.__ref;
+        incoming = baseCache.data[id] as DataStoreObject;
+      }
       return makeProxyObjectImpl(
         incoming as DataStoreObject,
         subSelectionSet,
@@ -332,7 +336,7 @@ function makeProxyObjectImpl(
 
 // @internal
 export default function makeProxyObject(
-  base: DataStoreObject,
+  base: DataStoreObject | Reference,
   selectionSets: readonly SelectionSetNode[],
   id: string | undefined,
   variables: unknown,
@@ -340,6 +344,10 @@ export default function makeProxyObject(
   fragmentMap: FragmentMap,
   cache: BaseCache
 ): ProxyObject {
+  if (isReference(base)) {
+    id = base.__ref;
+    base = cache.data[id] as DataStoreObject;
+  }
   if (!id) {
     id = makeStoreId(base, cache.keyFields, cache.supertypeMap);
   }

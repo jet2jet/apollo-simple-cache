@@ -32,6 +32,7 @@ export const PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS = Symbol(
 
 // @internal
 export interface BaseCache {
+  readonly data: Record<string, unknown>;
   readonly keyFields: KeyFields | undefined;
   readonly supertypeMap: SupertypeMap | undefined;
   readonly optimizedRead: OptimizedReadMap;
@@ -83,6 +84,7 @@ export type RevokedProxyRecords = Array<
   [record: ProxyCacheRecord, parentRecords: ProxyCacheRecord[]]
 >;
 
+// redefinition for definition order
 // @internal
 export interface BaseCache {
   readonly proxyCacheMap: ProxyCacheMap;

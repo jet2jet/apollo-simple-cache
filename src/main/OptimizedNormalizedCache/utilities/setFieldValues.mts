@@ -1,4 +1,4 @@
-import type { StoreObject } from '@apollo/client';
+import { type Reference, type StoreObject } from '@apollo/client';
 import type { FieldNode, SelectionSetNode } from 'graphql';
 import equal from '../../utilities/equal.mjs';
 import {
@@ -14,6 +14,8 @@ import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
+import isReference from './isReference.mjs';
+import makeReference from './makeReference.mjs';
 import makeStoreId from './makeStoreId.mjs';
 import markProxyDirty from './markProxyDirty.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
@@ -80,7 +82,7 @@ function mergeObjectWithId(
   incoming: object,
   selectionSet: SelectionSetNode | undefined,
   context: SetFieldValuesContext
-): [object, boolean] {
+): [Reference, boolean] {
   const rootStore = context.rs;
   let changed = false;
   if (
@@ -104,7 +106,7 @@ function mergeObjectWithId(
     [id],
     context
   );
-  return [r[0], changed || r[1]];
+  return [makeReference(id), changed || r[1]];
 }
 
 /** Return value `changed` only effects on `currentPath != null` */
@@ -278,7 +280,7 @@ function setFieldValuesImpl<T>(
       val != null && typeof val === 'object'
         ? makeStoreId(val, context.kf, context.sm)
         : undefined;
-    let merged: unknown;
+    let merged: Reference | undefined;
     let existing: unknown;
     function doMerge() {
       if (id) {
@@ -307,8 +309,8 @@ function setFieldValuesImpl<T>(
       if (record) {
         existing = record[1];
         doMerge();
-        if (merged !== undefined) {
-          changed = existing !== merged;
+        if (merged) {
+          changed = !isReference(existing) || existing.__ref !== merged.__ref;
           record[1] = merged;
         } else {
           let changed2: boolean;

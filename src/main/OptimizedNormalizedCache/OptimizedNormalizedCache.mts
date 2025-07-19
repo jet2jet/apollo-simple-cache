@@ -56,6 +56,7 @@ import getFragmentMap from './utilities/getFragmentMap.mjs';
 import getMissingFields from './utilities/getMissingFields.mjs';
 import isObjectUsing from './utilities/isObjectUsing.mjs';
 import isWatchingFields from './utilities/isWatchingFields.mjs';
+import makeReference from './utilities/makeReference.mjs';
 import makeStoreId from './utilities/makeStoreId.mjs';
 import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mjs';
 import modifyField from './utilities/modifyField.mjs';
@@ -88,7 +89,8 @@ function makeNewData(queryType: string, mutationType: string) {
 export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCacheObject> {
   public readonly assumeImmutableResults = true;
 
-  private data: Record<string, unknown> & {
+  // @internal
+  public data: Record<string, unknown> & {
     ROOT_QUERY: DataStoreObject;
     ROOT_MUTATION: DataStoreObject;
   };
@@ -184,7 +186,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     };
     this.toReference = (objOrIdOrRef, mergeIntoStore) => {
       if (typeof objOrIdOrRef === 'string') {
-        return { __ref: objOrIdOrRef };
+        return makeReference(objOrIdOrRef);
       }
       if (isReference(objOrIdOrRef)) {
         return objOrIdOrRef;
@@ -211,7 +213,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         );
         this.updateProxiesAndMissingFields(changedFields);
       }
-      return { __ref: id };
+      return makeReference(id);
     };
     this.setProxyCleanTimer = this._setProxyCleanTimer.bind(this);
   }
@@ -312,7 +314,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     }
 
     if (isProxyObject(source)) {
-      return { __ref: dataId };
+      return makeReference(dataId);
     }
 
     const changedFields: ChangedFieldsArray = [];
@@ -343,7 +345,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         false
       );
 
-      return { __ref: dataId };
+      return makeReference(dataId);
     } finally {
       this.updateProxiesAndMissingFields(changedFields);
 
@@ -608,7 +610,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
           return v;
         }
         const x = objectsWithId.find((x) => v === x[1]);
-        return x ? { __ref: x[0] } : v;
+        return x ? makeReference(x[0]) : v;
       })
     );
   }
@@ -709,8 +711,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     }
 
     if (options && options.resetResultCache) {
-      markProxyDirtyRecursive(this.data.ROOT_QUERY);
-      markProxyDirtyRecursive(this.data.ROOT_MUTATION);
+      markProxyDirtyRecursive(this.data);
 
       this.proxyCacheMap.clear();
       this.proxyCacheRecords.splice(0);
@@ -744,6 +745,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       this.data[id] as object | null | undefined,
       selectionSet,
       fragmentMap,
+      this.data,
       this.supertypeMap,
       this.optimizedRead,
       this.dataIdFromObject,

@@ -11,6 +11,7 @@ import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
+import isReference from './isReference.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
 
 /** Picks missing fields from current data object. */
@@ -19,6 +20,7 @@ export default function getMissingFields(
   currentData: object | null | undefined,
   selection: SelectionSetNode,
   fragmentMap: FragmentMap,
+  rootStore: Record<string, unknown>,
   supertypeMap: SupertypeMap | undefined,
   optimizedRead: OptimizedReadMap,
   dataIdFromObject: DataIdFromObjectFunction,
@@ -27,6 +29,10 @@ export default function getMissingFields(
   variables: Record<string, unknown> | undefined,
   currentPath = ''
 ): string[] {
+  if (currentData && isReference(currentData)) {
+    currentData = rootStore[currentData.__ref] as object | null | undefined;
+  }
+
   if (!currentData) {
     return [currentPath];
   }
@@ -42,6 +48,7 @@ export default function getMissingFields(
           item,
           selection,
           fragmentMap,
+          rootStore,
           supertypeMap,
           optimizedRead,
           dataIdFromObject,
@@ -126,6 +133,7 @@ export default function getMissingFields(
           value,
           fieldNode.selectionSet,
           fragmentMap,
+          rootStore,
           supertypeMap,
           optimizedRead,
           dataIdFromObject,

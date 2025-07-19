@@ -1,12 +1,17 @@
 import type { DataStoreObject } from '../internalTypes.mjs';
+import isReference from './isReference.mjs';
 import markProxyDirty from './markProxyDirty.mjs';
 
-function markProxyDirtyRecursiveImpl(data: unknown): void {
+// @internal
+export default function markProxyDirtyRecursive(data: unknown): void {
   if (!data || typeof data !== 'object') {
     return;
   }
+  if (isReference(data)) {
+    return;
+  }
   if (data instanceof Array) {
-    data.forEach((x) => markProxyDirtyRecursiveImpl(x));
+    data.forEach((x) => markProxyDirtyRecursive(x));
     return;
   }
 
@@ -14,11 +19,6 @@ function markProxyDirtyRecursiveImpl(data: unknown): void {
 
   for (const key in data) {
     const o = (data as Record<string, unknown>)[key];
-    markProxyDirtyRecursiveImpl(o);
+    markProxyDirtyRecursive(o);
   }
-}
-
-// @internal
-export default function markProxyDirtyRecursive(object: DataStoreObject): void {
-  markProxyDirtyRecursiveImpl(object);
 }
