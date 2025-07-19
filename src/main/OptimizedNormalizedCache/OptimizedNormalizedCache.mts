@@ -54,9 +54,12 @@ import type {
 import evictData from './utilities/evictData.mjs';
 import getFragmentMap from './utilities/getFragmentMap.mjs';
 import getMissingFields from './utilities/getMissingFields.mjs';
+import isObjectUsing from './utilities/isObjectUsing.mjs';
 import isWatchingFields from './utilities/isWatchingFields.mjs';
 import makeStoreId from './utilities/makeStoreId.mjs';
+import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mjs';
 import modifyField from './utilities/modifyField.mjs';
+import releaseDataStoreObject from './utilities/releaseDataStoreObject.mjs';
 import setFieldValues from './utilities/setFieldValues.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -684,6 +687,42 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       return object.__ref;
     }
     return makeStoreId(object, this.keyFields, this.supertypeMap);
+  }
+
+  public override gc(options?: { resetResultCache?: boolean }): string[] {
+    const ids: string[] = [];
+
+    for (const key in this.data) {
+      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') {
+        continue;
+      }
+      const o = this.data[key];
+      if (!isObjectUsing(o, key, this.data, true)) {
+        ids.push(key);
+      }
+    }
+    for (let l = ids.length, i = 0; i < l; ++i) {
+      const key = ids[i]!;
+      const o = this.data[key];
+      delete this.data[key];
+      releaseDataStoreObject(o);
+    }
+
+    if (options && options.resetResultCache) {
+      markProxyDirtyRecursive(this.data.ROOT_QUERY);
+      markProxyDirtyRecursive(this.data.ROOT_MUTATION);
+
+      this.proxyCacheMap.clear();
+      this.proxyCacheRecords.splice(0);
+      this.revokedProxyRecords.splice(0);
+      if (this.proxyCacheCleanTimer != null) {
+        clearTimeout(this.proxyCacheCleanTimer);
+        this.proxyCacheCleanTimer = undefined;
+      }
+      this.missingFields.splice(0);
+    }
+
+    return ids;
   }
 
   private getMissingFields(

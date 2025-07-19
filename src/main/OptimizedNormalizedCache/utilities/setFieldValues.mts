@@ -9,14 +9,15 @@ import {
   type FragmentMap,
   type SupertypeMap,
 } from '../internalTypes.mjs';
-import { PROXY_SYMBOL_DIRTY } from '../proxyObjects/types.mjs';
 import type { KeyFields, WriteToCacheMap } from '../types.mjs';
 import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
 import makeStoreId from './makeStoreId.mjs';
+import markProxyDirty from './markProxyDirty.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+import releaseDataStoreObject from './releaseDataStoreObject.mjs';
 
 interface SetFieldValuesContext {
   /** rootStore */
@@ -33,27 +34,6 @@ interface SetFieldValuesContext {
   cf: ChangedFieldsArray;
   /** variables */
   v: Record<string, unknown> | undefined;
-}
-
-function markProxyDirty(object: DataStoreObject) {
-  const rec = object[SYMBOL_PROXY_ARRAY];
-  if (rec) {
-    for (let l = rec.length, i = 0; i < l; ++i) {
-      rec[i]![PROXY_SYMBOL_DIRTY] = true;
-    }
-    rec.splice(0);
-  }
-}
-
-function releaseDataStoreObject(object: DataStoreObject) {
-  markProxyDirty(object);
-
-  for (const key in object) {
-    const o = object[key];
-    if (o && typeof o === 'object') {
-      releaseDataStoreObject(o as DataStoreObject);
-    }
-  }
 }
 
 function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {

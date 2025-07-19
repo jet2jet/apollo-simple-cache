@@ -1,4 +1,4 @@
-import type { ApolloCache } from '@apollo/client';
+import { InMemoryCache, type ApolloCache } from '@apollo/client';
 import {
   dummyGetAllUsersData,
   dummyGetUserByIdData,
@@ -17,6 +17,7 @@ import {
   PersonsDocument,
   PersonSimpleDocument,
 } from '../data/simpleQueries.mjs';
+import { OptimizedNormalizedCache } from '@/index.mjs';
 
 function cloneDeep<T>(value: T): T {
   return __cloneDeep(value, new WeakMap());
@@ -124,6 +125,31 @@ export function taskReadSameQuery(cache: ApolloCache<unknown>): void {
   }
 }
 
+export function taskReadSameQueryWithGc(cache: ApolloCache<unknown>): void {
+  // Write query
+  cache.writeQuery({
+    query: PersonsDocument,
+    data: {
+      __typename: 'Query',
+      persons: personsData,
+    },
+  });
+
+  for (let i = 0; i < 20; ++i) {
+    if (
+      cache instanceof InMemoryCache ||
+      cache instanceof OptimizedNormalizedCache
+    ) {
+      cache.gc({ resetResultCache: true });
+    } else {
+      cache.gc();
+    }
+    // Read query with data
+    const o = cache.readQuery({ query: PersonsDocument });
+    cloneDeep(o);
+  }
+}
+
 export function taskReadSimilarQuery(cache: ApolloCache<unknown>): void {
   // Write query
   cache.writeQuery({
@@ -154,6 +180,31 @@ export function taskReadSimilarQuery(cache: ApolloCache<unknown>): void {
 }
 
 export function taskWriteEntireAndWriteIndividual(
+  cache: ApolloCache<unknown>
+): void {
+  // Write query
+  cache.writeQuery({
+    query: PersonsDocument,
+    data: {
+      __typename: 'Query',
+      persons: personsData,
+    },
+  });
+
+  for (const p of personsData) {
+    // Write individual data
+    cache.writeQuery({
+      query: PersonDocument,
+      data: {
+        __typename: 'Query',
+        person: p,
+      },
+      variables: { id: p.id },
+    });
+  }
+}
+
+export function taskWriteReadEntireAndWriteReadIndividual(
   cache: ApolloCache<unknown>
 ): void {
   let o;
