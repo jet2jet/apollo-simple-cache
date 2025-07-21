@@ -328,6 +328,7 @@ function setFieldValuesImpl<T>(
           changed ||= changed2;
         }
         if (existing !== record[1]) {
+          changed = true;
           if (existing && typeof existing === 'object') {
             releaseDataStoreObject(existing as DataStoreObject);
           }
@@ -367,6 +368,7 @@ function setFieldValuesImpl<T>(
         changed ||= changed2;
       }
       if (destination[name] !== existing) {
+        changed = true;
         if (existing && typeof existing === 'object') {
           releaseDataStoreObject(existing as DataStoreObject);
         }
