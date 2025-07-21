@@ -9,8 +9,6 @@ tools/
 *.aps
 *.user
 .editorconfig
-.eslintignore
-.eslintrc.cjs
 .gitignore
 .gitmodules
 .gitattributes
@@ -23,6 +21,7 @@ yarn.lock
 yarn-error.log
 babel.config.json
 babel.config.*.json
+eslint.config.mjs
 jest.config.mjs
 tsconfig.json
 tsconfig.*.json
