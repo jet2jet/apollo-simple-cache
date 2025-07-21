@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { personsData } from '../../data/dummyData.mjs';
 import {
   PersonDocument,
@@ -18,6 +19,7 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
   );
 
   test('will affect individual query if optimized', () => {
+    const fn = jest.fn();
     const cache = new OptimizedNormalizedCache({
       possibleTypes,
       optimizedRead: {
@@ -39,6 +41,7 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
           if (dataId == null) {
             return undefined;
           }
+          fn(id);
           return context.readFromId(dataId);
         },
       },
@@ -60,6 +63,7 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
     });
 
     for (const p of personsData) {
+      fn.mockClear();
       const q = cache.readQuery({
         query: personDocument,
         variables: { id: p.id },
@@ -69,6 +73,7 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
           person: p,
         })
       );
+      expect(fn).toHaveBeenCalledWith(p.id);
     }
   });
 });

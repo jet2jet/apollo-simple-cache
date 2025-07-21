@@ -95,7 +95,7 @@ export function registerTests(
   });
 
   test('write and extract/restore query', () => {
-    let serializedObject;
+    let serializedObject: unknown;
     {
       const cache = makeCache();
 
@@ -126,6 +126,7 @@ export function registerTests(
       // Extracted data must be stringify-able
       expect(() => JSON.stringify(serializedObject)).not.toThrow();
     }
+    serializedObject = JSON.parse(JSON.stringify(serializedObject));
     {
       const cache = makeCache();
 
@@ -574,6 +575,73 @@ export function registerTests(
       })
     ).toThrow(MissingFieldError);
   });
+
+  if (cacheType === 'normalized') {
+    test('evict data and receive watch callback', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        variables: { id: person.id },
+        data: { __typename: 'Query', person },
+      });
+
+      const fn = jest.fn();
+      cache.watch({
+        query: personDocument,
+        variables: { id: person.id },
+        optimistic: false,
+        callback: fn,
+      });
+
+      cache.evict({ id: cache.identify(person) });
+
+      expect(fn).toHaveBeenCalledWith<
+        Parameters<Cache.WatchCallback<PersonQuery>>
+      >(
+        {
+          complete: false,
+          missing: [expect.any(MissingFieldError)],
+          result: expect.toBeOneOf([expect.anything(), undefined]),
+        },
+        undefined
+      );
+    });
+
+    test('evict data but not receive watch callback when broadcast = false', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        variables: { id: person.id },
+        data: { __typename: 'Query', person },
+      });
+
+      const fn = jest.fn();
+      cache.watch({
+        query: personDocument,
+        variables: { id: person.id },
+        optimistic: false,
+        callback: fn,
+      });
+
+      cache.evict({ id: cache.identify(person), broadcast: false });
+
+      expect(fn).not.toHaveBeenCalled();
+    });
+  }
 
   test('write and read query with fragment', () => {
     const cache = makeCache();
