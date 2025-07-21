@@ -19,7 +19,11 @@ jobs:
         id: changelog
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-          BODY=$(awk "/^##[[:space:]]*${TAG_NAME//\//\\/}[[:space:]]*\$/,/^##[[:space:]]*/" CHANGELOG.md | sed '1d;$d')
+          BODY=$(awk -v tag="## ${TAG_NAME}" '
+            $0 ~ tag {found=1; next}
+            found && /^## / {exit}
+            found {print}
+          ' CHANGELOG.md)
           echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
           if [ -n "$BODY" ]; then
             echo "FOUND=true" >> "$GITHUB_ENV"
