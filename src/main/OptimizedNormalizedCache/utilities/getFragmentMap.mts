@@ -8,7 +8,7 @@ type DocumentNodeWithCachedFragmentMap = DocumentNode & {
 };
 
 function makeFragmentMap(query: DocumentNode) {
-  const map: FragmentMap = Object.create(null);
+  const map: FragmentMap = { __proto__: null } as unknown as FragmentMap;
   for (const def of query.definitions) {
     if (def.kind === Kind.FRAGMENT_DEFINITION) {
       map[def.name.value] = def;

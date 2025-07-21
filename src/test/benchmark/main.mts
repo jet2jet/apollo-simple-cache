@@ -67,10 +67,8 @@ const table = bench.tasks
       return {
         'Task name': task.name,
         'Latency avg (ns)': `${formatNumber(mToNs(latency.mean), 5, 2)} \xb1 ${latency.rme.toFixed(2)}%`,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         'Latency med (ns)': `${formatNumber(mToNs(latency.p50!), 5, 2)} \xb1 ${formatNumber(mToNs(latency.mad!), 5, 2)}`,
         'Throughput avg (ops/s)': `${Math.round(throughput.mean).toString()} \xb1 ${throughput.rme.toFixed(2)}%`,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         'Throughput med (ops/s)': `${Math.round(throughput.p50!).toString()} \xb1 ${Math.round(throughput.mad!).toString()}`,
         Samples: latency.samples.length,
       };

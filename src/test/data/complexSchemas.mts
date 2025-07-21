@@ -102,7 +102,7 @@ const QueryType = new GraphQLObjectType({
   fields: {
     users: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(UserType))),
-      resolve: () => dummyUsers,
+      resolve: (): unknown => dummyUsers,
     },
     user: {
       type: new GraphQLNonNull(UserType),
@@ -111,7 +111,8 @@ const QueryType = new GraphQLObjectType({
           type: new GraphQLNonNull(GraphQLID),
         },
       },
-      resolve: (_, args: { id: number }) => {
+      resolve: (_, args: { id: number }): unknown => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         return dummyUsers.find((u) => u.id === args.id) ?? null;
       },
     },

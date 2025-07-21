@@ -9,7 +9,7 @@ export const config: Config = {
         Query: {
           fields: {
             // for simple schema
-            person: (existing, options) => {
+            person: (existing, options): unknown => {
               if (existing != null) {
                 return existing;
               }
@@ -19,7 +19,7 @@ export const config: Config = {
               }
               return options.toReference({ __typename: 'Person', id });
             },
-            location: (existing, options) => {
+            location: (existing, options): unknown => {
               if (existing != null) {
                 return existing;
               }
@@ -30,7 +30,7 @@ export const config: Config = {
               return options.toReference({ __typename: 'Location', id });
             },
             // for complex schema
-            user: (existing, options) => {
+            user: (existing, options): unknown => {
               if (existing != null) {
                 return existing;
               }

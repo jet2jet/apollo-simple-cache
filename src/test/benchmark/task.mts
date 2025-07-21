@@ -38,7 +38,7 @@ function cloneDeep<T>(value: T): T {
       }
       return r as T;
     } else {
-      const r: Record<string | symbol, unknown> = Object.create(null);
+      const r: Record<string | symbol, unknown> = {};
       seen.set(value, r);
       for (const k of (
         Object.getOwnPropertyNames(value) as Array<string | symbol>

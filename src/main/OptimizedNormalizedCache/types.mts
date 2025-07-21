@@ -29,6 +29,7 @@ export interface KeyFieldsObject {
 export type KeyFields = readonly string[] | KeyFieldsObject;
 
 export type PossibleTypesMap = {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   readonly [supertype in (string & {}) | CustomTypenames]?: readonly string[];
 };
 
@@ -50,6 +51,7 @@ export type OptimizedReadFunction = (
 ) => unknown;
 
 export type OptimizedReadMap = {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   [typename in (string & {}) | CustomTypenames]?: OptimizedReadFunction;
 };
 
@@ -66,6 +68,7 @@ export type WriteToCacheFunction = (
 ) => unknown;
 
 export type WriteToCacheMap = {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   [typename in (string & {}) | CustomTypenames]?: WriteToCacheFunction;
 };
 

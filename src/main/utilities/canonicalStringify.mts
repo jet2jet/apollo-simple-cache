@@ -8,6 +8,7 @@ export default function canonicalStringify(value: unknown): string | undefined {
     if (type === 'string') {
       return JSON.stringify(o);
     } else if (type === 'number' || type === 'bigint' || type === 'boolean') {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       return o.toString();
     } else if (type !== 'object') {
       return undefined;

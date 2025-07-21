@@ -133,7 +133,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
               `'${key}' is not found`,
               [key],
               query.query,
-              query.variables
+              query.variables as Record<string, unknown> | undefined
             ),
           ],
         };
@@ -142,7 +142,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
         `'${key}' is not found`,
         [key],
         query.query,
-        query.variables
+        query.variables as Record<string, unknown> | undefined
       );
     } else {
       return {

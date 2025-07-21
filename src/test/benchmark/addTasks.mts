@@ -28,7 +28,6 @@ export function addTasks(bench: Bench, { name, makeCache }: Config): void {
       await waitMicrotask();
       const cache = makeCacheWrapper(makeCache, name);
       fn(cache);
-      cache.reset();
     });
   }
 }

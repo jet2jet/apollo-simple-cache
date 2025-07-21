@@ -137,7 +137,7 @@ function setFieldValuesImpl<T>(
     }
     for (let l = source.length, i = 0; i < l; ++i) {
       const e = destArray[i];
-      const s = source[i];
+      const s: unknown = source[i];
       if (s == null || typeof s !== 'object') {
         destArray[i] = s;
       } else {
@@ -178,7 +178,7 @@ function setFieldValuesImpl<T>(
     // if changedFields has many fields, assume the object itself is changed
     if (changedFields.length < 3) {
       for (let l = changedFields.length, i = 0; i < l; ++i) {
-        pushChangedFields(context.cf, changedFields[i]!);
+        pushChangedFields(context.cf, changedFields[i]);
       }
       return [destArray as unknown as T, false];
     } else {
@@ -239,7 +239,7 @@ function setFieldValuesImpl<T>(
   // if changedFields has many fields, assume the object itself is changed
   if (!changed && changedFields.length < 3) {
     for (let l = changedFields.length, i = 0; i < l; ++i) {
-      pushChangedFields(context.cf, changedFields[i]!);
+      pushChangedFields(context.cf, changedFields[i]);
     }
     return [destination as T, false];
   } else {

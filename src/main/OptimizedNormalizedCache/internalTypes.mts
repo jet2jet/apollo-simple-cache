@@ -71,5 +71,5 @@ export const SYMBOL_PROXY_ARRAY = Symbol('smc:proxies');
 // @internal
 export type DataStoreObject = {
   [key: string]: StoreValue | DataStoreObject;
-  [SYMBOL_PROXY_ARRAY]: ProxyObject[];
+  [SYMBOL_PROXY_ARRAY]?: ProxyObject[];
 };

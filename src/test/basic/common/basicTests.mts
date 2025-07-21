@@ -289,7 +289,7 @@ export function registerTests(
     );
   });
 
-  test('will not affect list and individual query', () => {
+  test('will not affect list and individual query', async () => {
     const cache = makeCache();
 
     const personsDocument = cache.transformDocument(
@@ -315,7 +315,7 @@ export function registerTests(
       expect(q).toBeNull();
     }
 
-    cache.reset();
+    await cache.reset();
 
     for (const p of personsData) {
       cache.writeQuery({
@@ -448,7 +448,7 @@ export function registerTests(
         id,
         fields: {
           name: (value: string) => {
-            return `Modified_${value as string}`;
+            return `Modified_${value}`;
           },
         },
       });

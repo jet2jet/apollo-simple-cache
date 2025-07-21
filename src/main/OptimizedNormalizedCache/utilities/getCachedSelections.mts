@@ -22,10 +22,7 @@ function makeSelections(
 
   return resultSelections;
 
-  function impl(
-    selections: readonly SelectionNode[],
-    typename?: string | undefined
-  ) {
+  function impl(selections: readonly SelectionNode[], typename?: string) {
     for (let l = selections.length, i = 0; i < l; ++i) {
       const selection = selections[i]!;
       switch (selection.kind) {

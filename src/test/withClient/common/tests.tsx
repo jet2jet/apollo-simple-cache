@@ -23,7 +23,7 @@ function cloneObjectWithoutTypename<T>(value: T): T {
     return value;
   }
   if (value instanceof Array) {
-    return value.map((x) => cloneObjectWithoutTypename(x)) as T;
+    return value.map((x): unknown => cloneObjectWithoutTypename(x)) as T;
   }
   const newObj: T = {} as T;
   for (const key of Object.getOwnPropertyNames(value)) {

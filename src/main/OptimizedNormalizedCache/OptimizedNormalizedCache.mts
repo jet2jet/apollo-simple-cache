@@ -70,13 +70,19 @@ type AnyVariable = any;
 
 type WatcherData = [options: Cache.WatchOptions<object>, revoked: boolean];
 
+type RootDataStoreObject = Record<string, DataStoreObject> & {
+  ROOT_QUERY: DataStoreObject;
+  ROOT_MUTATION: DataStoreObject;
+  ROOT_SUBSCRIPTION: DataStoreObject;
+};
+
 function makeNewData(
   queryType: string,
   mutationType: string,
   subscriptionType: string
-) {
+): RootDataStoreObject {
   return {
-    __proto__: null,
+    __proto__: null as unknown as DataStoreObject, // hacky because TS does not ignore __proto__
     ROOT_QUERY: {
       __proto__: null,
       __typename: queryType,
@@ -99,11 +105,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   public readonly assumeImmutableResults = true;
 
   // @internal
-  public data: Record<string, unknown> & {
-    ROOT_QUERY: DataStoreObject;
-    ROOT_MUTATION: DataStoreObject;
-    ROOT_SUBSCRIPTION: DataStoreObject;
-  };
+  public data: RootDataStoreObject;
 
   // @internal
   public readonly keyFields: KeyFields | undefined;
@@ -355,7 +357,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       }
 
       const target =
-        this.data[dataId] || (this.data[dataId] = Object.create(null));
+        this.data[dataId] || (this.data[dataId] = { __proto__: null });
       setFieldValues(
         this.data,
         target,
@@ -426,7 +428,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
               `Missing fields: ${missing.join(',')}`,
               missing,
               query.query,
-              query.variables
+              query.variables as Record<string, unknown> | undefined
             ),
           ],
         };
@@ -438,7 +440,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
               `Missing fields: ${dataId}`,
               [dataId],
               query.query,
-              query.variables
+              query.variables as Record<string, unknown> | undefined
             ),
           ],
         };
@@ -455,7 +457,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         `Missing fields: ${missing.join(',')}`,
         missing,
         query.query,
-        query.variables
+        query.variables as Record<string, unknown> | undefined
       );
     } else {
       const proxy = this.getProxy(
@@ -473,7 +475,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
               `Missing fields: ${dataId}`,
               [dataId],
               query.query,
-              query.variables
+              query.variables as Record<string, unknown> | undefined
             ),
           ],
         };
@@ -589,7 +591,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       ) {
         continue;
       }
-      d[key] = Object.assign(Object.create(null), serializedState[key]);
+      d[key] = { __proto__: null, ...serializedState[key] };
     }
     for (const key in serializedState) {
       const targetParent =
@@ -626,7 +628,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       } else if (isReference(value)) {
         r = rootStore[value.__ref];
       } else {
-        r = source || Object.create(null);
+        r = source || { __proto__: null };
         for (const key in value) {
           storeToObject(
             rootStore,
@@ -645,26 +647,10 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   }
 
   public override extract(_optimistic?: boolean): NormalizedCacheObject {
-    const objectsWithId = Object.entries(this.data).filter(
-      (x) =>
-        x[0] !== 'ROOT_QUERY' &&
-        x[0] !== 'ROOT_MUTATION' &&
-        x[0] !== 'ROOT_SUBSCRIPTION'
-    ) as Array<[string, object]>;
-    // Replace objects with id ref
     const rootStore = this.data;
     return JSON.parse(
-      JSON.stringify(rootStore, function (_, v) {
-        if (v == null || typeof v !== 'object') {
-          return v;
-        }
-        if (this === rootStore) {
-          return v;
-        }
-        const x = objectsWithId.find((x) => v === x[1]);
-        return x ? makeReference(x[0]) : v;
-      })
-    );
+      JSON.stringify(rootStore)
+    ) as unknown as NormalizedCacheObject;
   }
 
   public override removeOptimistic(_id: string): void {
@@ -853,7 +839,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       return o;
     }
     return makeProxyObject(
-      o as DataStoreObject,
+      o,
       [selectionSet],
       id,
       variables,

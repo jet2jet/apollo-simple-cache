@@ -64,7 +64,7 @@ function makeModifyProxyObject(
     const a: unknown[] = [];
     proxyMap.set(value, a);
     for (let i = 0, l = value.length; i < l; ++i) {
-      const v = value[i];
+      const v: unknown = value[i];
       if (v != null && typeof v === 'object') {
         a[i] = makeModifyProxyObject(proxyMap, v);
       } else {
@@ -99,7 +99,7 @@ function makeModifyProxyObject(
     }
   }
 
-  const target = Object.create(null) as Record<string | symbol, unknown>;
+  const target = { __proto__: null } as Record<string | symbol, unknown>;
   const proxy = new Proxy(target, {
     get: (_, p) => {
       if (hasOwn(target, p)) {
@@ -250,7 +250,7 @@ function doModify(
           if (value == null || typeof value !== 'object') {
             return value;
           }
-          return mergeIntoStore(Object.create(null), value, undefined);
+          return mergeIntoStore({ __proto__: null }, value, undefined);
         });
       }
       for (let i = object.length - 1; i >= 0; --i) {
@@ -278,19 +278,19 @@ function doModify(
             outChangedFields.push(currentPath);
             currentPath = undefined;
           }
-          object[i] = mergeIntoStore(Object.create(null), v, undefined);
+          object[i] = mergeIntoStore({ __proto__: null }, v, undefined);
         } else {
           object[i] = mergeIntoStore(o, v, currentPath);
         }
       }
-      return object;
+      return object as unknown[];
     } // for Array
 
     const id =
       makeStoreId(returnValue, keyFields, supertypeMap) ||
       makeStoreId(object, keyFields, supertypeMap);
     if (id) {
-      object = rootStore[id] || (rootStore[id] = Object.create(null));
+      object = rootStore[id] || (rootStore[id] = { __proto__: null });
       seenObject.add(object);
     }
 
@@ -325,7 +325,7 @@ function doModify(
               const o = record[1];
               if (o == null || typeof o !== 'object') {
                 mod = true;
-                record[1] = mergeIntoStore(Object.create(null), r, undefined);
+                record[1] = mergeIntoStore({ __proto__: null }, r, undefined);
               } else {
                 record[1] = mergeIntoStore(
                   o,
@@ -370,7 +370,7 @@ function doModify(
           if (v == null || typeof v !== 'object') {
             mod = true;
             (object as Record<string, unknown>)[key] = mergeIntoStore(
-              Object.create(null),
+              { __proto__: null },
               r,
               undefined
             );
@@ -433,7 +433,7 @@ function doModify(
           args = {};
         } else {
           try {
-            args = JSON.parse(argsString);
+            args = JSON.parse(argsString) as Record<string, unknown>;
           } catch {
             args = {};
           }
@@ -445,7 +445,7 @@ function doModify(
           if (r != null && typeof r === 'object') {
             if (v == null || typeof v !== 'object') {
               mod = true;
-              record[1] = mergeIntoStore(Object.create(null), r, undefined);
+              record[1] = mergeIntoStore({ __proto__: null }, r, undefined);
             } else {
               record[1] = mergeIntoStore(
                 v,
@@ -465,7 +465,7 @@ function doModify(
           mod = true;
           const v =
             r != null && typeof r === 'object'
-              ? mergeIntoStore(Object.create(null), r, undefined)
+              ? mergeIntoStore({ __proto__: null }, r, undefined)
               : r;
           fieldWithArguments.r.push([args, v]);
         }
@@ -487,7 +487,7 @@ function doModify(
               if (v == null || typeof v !== 'object') {
                 mod = true;
                 (object as Record<string, unknown>)[actualFieldName] =
-                  mergeIntoStore(Object.create(null), r, undefined);
+                  mergeIntoStore({ __proto__: null }, r, undefined);
               } else {
                 (object as Record<string, unknown>)[actualFieldName] =
                   mergeIntoStore(
@@ -507,7 +507,7 @@ function doModify(
           mod = true;
           if (r != null && typeof r === 'object') {
             (object as Record<string, unknown>)[actualFieldName] =
-              mergeIntoStore(Object.create(null), r, undefined);
+              mergeIntoStore({ __proto__: null }, r, undefined);
           } else {
             (object as Record<string, unknown>)[actualFieldName] = r;
           }
@@ -531,7 +531,7 @@ function doModify(
     _currentPath = undefined;
   }
   const ret = mergeIntoStore(
-    value != null && typeof value === 'object' ? value : Object.create(null),
+    value != null && typeof value === 'object' ? value : { __proto__: null },
     r,
     _currentPath
   );

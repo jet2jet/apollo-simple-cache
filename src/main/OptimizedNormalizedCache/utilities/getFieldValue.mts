@@ -22,8 +22,8 @@ export default function getFieldValue(
   optimizedRead: OptimizedReadMap,
   dataIdFromObject: DataIdFromObjectFunction,
   readFromId: ReadFromIdFunction,
-  selectionTypename?: string | undefined,
-  variables?: Record<string, unknown> | undefined
+  selectionTypename?: string,
+  variables?: Record<string, unknown>
 ): unknown {
   const typename = (object as StoreObject).__typename;
   let actualTypename: string | undefined;

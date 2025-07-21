@@ -78,10 +78,7 @@ const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
               }
             }
           }
-          return getEffectiveArguments(
-            fieldArguments,
-            variables as Record<string, unknown> | undefined
-          );
+          return getEffectiveArguments(fieldArguments, variables);
         };
     }
 

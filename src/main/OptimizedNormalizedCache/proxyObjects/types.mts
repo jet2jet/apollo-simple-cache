@@ -72,7 +72,6 @@ export interface ProxyCacheEntry {
   /** fragmentMap */
   fm: FragmentMap;
   /** subMap */
-  // eslint-disable-next-line no-use-before-define
   sm?: ProxyCacheMap | undefined;
 }
 
