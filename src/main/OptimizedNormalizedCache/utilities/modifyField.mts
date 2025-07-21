@@ -614,7 +614,11 @@ export default function modifyField<Entity extends Record<string, any>>(
         ) {
           modified = true;
           records.splice(i, 1);
-          outChangedFields.push([...currentPath, [actualFieldName!, args]]);
+          const newPath = currentPath.slice() as typeof currentPath;
+          // mark as deleted
+          newPath[0] = true;
+          newPath.push([actualFieldName!, args]);
+          outChangedFields.push(newPath);
         } else {
           record[1] = modifiedValue;
           if (modifiedValue !== recordValue) {
@@ -648,8 +652,11 @@ export default function modifyField<Entity extends Record<string, any>>(
         modifiedValue === INVALIDATE_MODIFIER
       ) {
         modified = true;
-        delete (data as Record<string, unknown>)[fieldName];
-        outChangedFields.push([...currentPath, fieldName]);
+        const newPath = currentPath.slice() as typeof currentPath;
+        // mark as deleted
+        newPath[0] = true;
+        newPath.push(fieldName);
+        outChangedFields.push(newPath);
       } else {
         (data as Record<string, unknown>)[fieldName] = modifiedValue;
         if (modifiedValue !== value) {

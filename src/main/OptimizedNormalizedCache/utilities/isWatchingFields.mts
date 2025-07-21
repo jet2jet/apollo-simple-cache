@@ -4,6 +4,7 @@ import type {
   ChangedFields,
   ChangedFieldsArray,
   FragmentMap,
+  SliceFirst,
   SupertypeMap,
 } from '../internalTypes.mjs';
 import type { KeyFields } from '../types.mjs';
@@ -28,7 +29,7 @@ export default function isWatchingFields(
   keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined
 ): boolean {
-  const field = fieldList[index];
+  const field = fieldList[index] as SliceFirst<ChangedFields>[number];
   for (
     let cs = getCachedSelections(selectionSetNode, fragmentMap),
       l = cs.length,
@@ -82,7 +83,7 @@ export default function isWatchingFields(
       const id = makeStoreId(value, keyFields, supertypeMap);
       if (id) {
         for (const idField of idFields) {
-          if (idField[0] === id) {
+          if (idField[1] === id) {
             if (
               !subSelectionSet ||
               isWatchingFields(
@@ -91,7 +92,7 @@ export default function isWatchingFields(
                 fragmentMap,
                 idField,
                 idFields,
-                1,
+                2,
                 variables,
                 keyFields,
                 supertypeMap

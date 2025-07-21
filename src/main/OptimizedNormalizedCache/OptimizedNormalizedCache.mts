@@ -122,7 +122,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   private proxyCacheCleanTimer: ReturnType<typeof setTimeout> | undefined;
 
   private txCount: number;
-  private readonly missingFields: MissingFieldRecord[];
+  private readonly missingFieldsNothing: MissingFieldRecord[];
+  private readonly missingFieldsExisting: MissingFieldRecord[];
   private readonly watchers: WatcherData[];
 
   public readonly canRead: CanReadFunction;
@@ -172,7 +173,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     this.revokedProxyRecords = [];
 
     this.txCount = 0;
-    this.missingFields = [];
+    this.missingFieldsNothing = [];
+    this.missingFieldsExisting = [];
     this.watchers = [];
 
     this.canRead = (objOrIdOrRef) => {
@@ -489,7 +491,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         clearTimeout(this.proxyCacheCleanTimer);
         this.proxyCacheCleanTimer = undefined;
       }
-      this.missingFields.splice(0);
+      this.missingFieldsNothing.splice(0);
+      this.missingFieldsExisting.splice(0);
       return Promise.resolve();
     } finally {
       if (!--this.txCount) {
@@ -514,14 +517,14 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       ++this.txCount;
       let changed = evictData(
         this.data[id],
-        [id],
+        [true, id],
         changedFields,
         removedObjects,
         options
       );
       if (id !== 'ROOT_QUERY' && id !== 'ROOT_MUTATION') {
         removedObjects.push(this.data[id] as object);
-        changedFields.push([id]);
+        changedFields.push([true, id]);
         delete this.data[id];
         changed = true;
       }
@@ -667,7 +670,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         this.optimizedRead,
         this.dataIdFromObject,
         this.readFromId,
-        [id],
+        [false, id],
         changedFields
       );
     } finally {
@@ -720,7 +723,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         clearTimeout(this.proxyCacheCleanTimer);
         this.proxyCacheCleanTimer = undefined;
       }
-      this.missingFields.splice(0);
+      this.missingFieldsNothing.splice(0);
+      this.missingFieldsExisting.splice(0);
     }
 
     return ids;
@@ -734,11 +738,20 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     variables: Record<string, unknown> | undefined,
     variableString: string
   ) {
-    const mf = this.missingFields;
-    for (let l = mf.length, i = 0; i < l; ++i) {
-      const missing = mf[i]!;
-      if (missing[0] === selectionSet && missing[3] === variableString) {
-        return missing[4];
+    for (
+      let mf = this.missingFieldsExisting, l = mf.length, i = 0;
+      i < l;
+      ++i
+    ) {
+      const mfs = mf[i]!;
+      if (mfs[0] === selectionSet && mfs[3] === variableString) {
+        return mfs[4];
+      }
+    }
+    for (let mf = this.missingFieldsNothing, l = mf.length, i = 0; i < l; ++i) {
+      const mfs = mf[i]!;
+      if (mfs[0] === selectionSet && mfs[3] === variableString) {
+        return mfs[4];
       }
     }
     const missing = getMissingFields(
@@ -748,18 +761,27 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       this.data,
       this.supertypeMap,
       this.optimizedRead,
-      this.dataIdFromObject,
-      this.readFromId,
+      {
+        dataIdFromObject: this.dataIdFromObject,
+        readFromId: this.readFromId,
+        checkExistenceOnly: true,
+        effectiveArguments: {},
+      },
       typename,
       variables
     );
-    mf.push([
+    const record: MissingFieldRecord = [
       selectionSet,
       fragmentMap,
       cloneVariables(variables),
       variableString,
       missing,
-    ]);
+    ];
+    if (missing.length > 0) {
+      this.missingFieldsExisting.push(record);
+    } else {
+      this.missingFieldsNothing.push(record);
+    }
     return missing;
   }
 
@@ -826,7 +848,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       [ChangedFieldsArray, ChangedFieldsArray]
     >(
       (prev, cur) => {
-        if (cur[0] === 'ROOT_QUERY') {
+        if (cur[1] === 'ROOT_QUERY') {
           prev[0].push(cur);
         } else {
           prev[1].push(cur);
@@ -836,30 +858,54 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       [[], []]
     );
 
-    const mf = this.missingFields;
-    for (let i = mf.length - 1; i >= 0; --i) {
-      const missingField = mf[i]!;
-      let found = false;
-      for (let l = rootFields.length, j = 0; j < l; ++j) {
+    for (let l = rootFields.length, j = 0; j < l; ++j) {
+      const changedFields = rootFields[j]!;
+      const isDeleted = changedFields[0];
+      if (isDeleted) {
+        for (
+          let mfs = this.missingFieldsNothing, i = mfs.length - 1;
+          i >= 0;
+          --i
+        ) {
+          const missingField = mfs[i]!;
+          if (
+            isWatchingFields(
+              this.data.ROOT_QUERY,
+              missingField[0],
+              missingField[1],
+              changedFields,
+              idFields,
+              2,
+              missingField[2],
+              this.keyFields,
+              this.supertypeMap
+            )
+          ) {
+            mfs.splice(i);
+          }
+        }
+      }
+      for (
+        let mfs = this.missingFieldsExisting, i = mfs.length - 1;
+        i >= 0;
+        --i
+      ) {
+        const missingField = mfs[i]!;
         if (
           isWatchingFields(
             this.data.ROOT_QUERY,
             missingField[0],
             missingField[1],
-            rootFields[j]!,
+            changedFields,
             idFields,
-            1,
+            2,
             missingField[2],
             this.keyFields,
             this.supertypeMap
           )
         ) {
-          found = true;
-          break;
+          mfs.splice(i);
         }
-      }
-      if (found) {
-        mf.splice(i, 1);
       }
     }
 

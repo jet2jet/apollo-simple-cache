@@ -1,12 +1,7 @@
 import type { StoreObject } from '@apollo/client';
 import type { SelectionSetNode } from 'graphql';
 import type { FragmentMap, SupertypeMap } from '../internalTypes.mjs';
-import type {
-  DataIdFromObjectFunction,
-  OptimizedReadContext,
-  OptimizedReadMap,
-  ReadFromIdFunction,
-} from '../types.mjs';
+import type { OptimizedReadContext, OptimizedReadMap } from '../types.mjs';
 import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
@@ -23,8 +18,7 @@ export default function getMissingFields(
   rootStore: Record<string, unknown>,
   supertypeMap: SupertypeMap | undefined,
   optimizedRead: OptimizedReadMap,
-  dataIdFromObject: DataIdFromObjectFunction,
-  readFromId: ReadFromIdFunction,
+  optimizedReadContext: OptimizedReadContext,
   typename: string | undefined,
   variables: Record<string, unknown> | undefined,
   currentPath = ''
@@ -40,7 +34,7 @@ export default function getMissingFields(
 
   if (currentData instanceof Array) {
     currentData.forEach((item: unknown, i) => {
-      const pathName = joinCurrentPath(`[${i}]`);
+      const pathName = !currentPath ? `[${i}]` : `${currentPath}.[${i}]`;
       if (item === undefined) {
         missingFields.push(pathName);
       } else if (item != null && typeof item === 'object') {
@@ -51,8 +45,7 @@ export default function getMissingFields(
           rootStore,
           supertypeMap,
           optimizedRead,
-          dataIdFromObject,
-          readFromId,
+          optimizedReadContext,
           (item as StoreObject).__typename,
           variables,
           pathName
@@ -63,13 +56,6 @@ export default function getMissingFields(
       }
     });
   } else {
-    const optimizedReadContext: OptimizedReadContext = {
-      checkExistenceOnly: true,
-      dataIdFromObject,
-      readFromId,
-      effectiveArguments: {},
-    };
-
     for (
       let cs = getCachedSelections(selection, fragmentMap),
         l = cs.length,
@@ -91,7 +77,7 @@ export default function getMissingFields(
       const read =
         (typename && optimizedRead[typename]) ||
         (actualTypename && optimizedRead[actualTypename]);
-      const pathName = joinCurrentPath(name);
+      const pathName = !currentPath ? name : `${currentPath}.${name}`;
       const effectiveArguments = getEffectiveArguments(fieldNode, variables);
       optimizedReadContext.effectiveArguments = effectiveArguments || {};
 
@@ -136,8 +122,7 @@ export default function getMissingFields(
           rootStore,
           supertypeMap,
           optimizedRead,
-          dataIdFromObject,
-          readFromId,
+          optimizedReadContext,
           (value as StoreObject).__typename,
           variables,
           pathName
@@ -150,8 +135,4 @@ export default function getMissingFields(
   }
 
   return missingFields;
-
-  function joinCurrentPath(path: string) {
-    return !currentPath ? path : `${currentPath}.${path}`;
-  }
 }

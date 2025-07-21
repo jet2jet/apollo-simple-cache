@@ -34,7 +34,19 @@ export interface FieldWithArguments {
 }
 
 // @internal
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SliceFirst<T extends any[]> = T extends [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...infer A extends any[],
+]
+  ? A
+  : [];
+
+// @internal
 export type ChangedFields = [
+  isDeleted: boolean,
   id: string,
   ...Array<
     string | [fieldName: string, effectiveArguments: Record<string, unknown>]

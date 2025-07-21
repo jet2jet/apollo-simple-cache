@@ -7,6 +7,7 @@ import {
   type ChangedFieldsArray,
   type DataStoreObject,
   type FragmentMap,
+  type SliceFirst,
   type SupertypeMap,
 } from '../internalTypes.mjs';
 import type { KeyFields, WriteToCacheMap } from '../types.mjs';
@@ -43,9 +44,12 @@ function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {
   if (l !== b.length) {
     return false;
   }
-  for (let i = 0; i < l; ++i) {
-    const aElem = a[i]!;
-    const bElem = b[i]!;
+  if (a[0] !== b[0]) {
+    return false;
+  }
+  for (let i = 1; i < l; ++i) {
+    const aElem = a[i]! as SliceFirst<ChangedFields>[number];
+    const bElem = b[i]! as SliceFirst<ChangedFields>[number];
     if (typeof aElem === 'string') {
       if (aElem !== bElem) {
         return false;
@@ -103,7 +107,7 @@ function mergeObjectWithId(
     rootStore[id] as object,
     incoming,
     selectionSet,
-    [id],
+    [false, id],
     context
   );
   return [makeReference(id), changed || r[1]];
@@ -451,6 +455,12 @@ export default function setFieldValues(
       mergeObjectWithId(id, undefined, source, undefined, context);
     }
   } else {
-    setFieldValuesImpl(target, source, selectionSet, [startPathName], context);
+    setFieldValuesImpl(
+      target,
+      source,
+      selectionSet,
+      [false, startPathName],
+      context
+    );
   }
 }
