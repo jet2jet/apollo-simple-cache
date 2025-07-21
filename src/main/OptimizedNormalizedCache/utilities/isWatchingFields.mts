@@ -7,11 +7,10 @@ import type {
   SliceFirst,
   SupertypeMap,
 } from '../internalTypes.mjs';
-import type { KeyFields } from '../types.mjs';
+import type { DataIdFromObjectFunction, KeyFields } from '../types.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldValue from './getFieldValue.mjs';
-import makeStoreId from './makeStoreId.mjs';
 
 function noop(): never {
   throw new Error();
@@ -27,7 +26,8 @@ export default function isWatchingFields(
   index: number,
   variables: Record<string, unknown> | undefined,
   keyFields: KeyFields | undefined,
-  supertypeMap: SupertypeMap | undefined
+  supertypeMap: SupertypeMap | undefined,
+  dataIdFromObject: DataIdFromObjectFunction
 ): boolean {
   const field = fieldList[index] as SliceFirst<ChangedFields>[number];
   for (
@@ -74,13 +74,14 @@ export default function isWatchingFields(
         index + 1,
         variables,
         keyFields,
-        supertypeMap
+        supertypeMap,
+        dataIdFromObject
       );
     }
 
     // Check idFields
     if (value && typeof value === 'object') {
-      const id = makeStoreId(value, keyFields, supertypeMap);
+      const id = dataIdFromObject(value);
       if (id) {
         for (const idField of idFields) {
           if (idField[1] === id) {
@@ -95,7 +96,8 @@ export default function isWatchingFields(
                 2,
                 variables,
                 keyFields,
-                supertypeMap
+                supertypeMap,
+                dataIdFromObject
               )
             ) {
               return true;

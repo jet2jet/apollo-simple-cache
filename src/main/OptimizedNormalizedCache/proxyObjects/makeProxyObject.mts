@@ -12,7 +12,6 @@ import getActualTypename from '../utilities/getActualTypename.mjs';
 import getCachedSelections from '../utilities/getCachedSelections.mjs';
 import getEffectiveArguments from '../utilities/getEffectiveArguments.mjs';
 import getFieldValue from '../utilities/getFieldValue.mjs';
-import makeStoreId from '../utilities/makeStoreId.mjs';
 import findExistingProxy from './findExistingProxy.mjs';
 import {
   PROXY_SYMBOL_BASE,
@@ -346,7 +345,7 @@ export default function makeProxyObject(
     base = cache.data[id] as DataStoreObject;
   }
   if (!id) {
-    id = makeStoreId(base, cache.keyFields, cache.supertypeMap);
+    id = cache.dataIdFromObject(base);
   }
   const entry = findExistingProxy(
     base,

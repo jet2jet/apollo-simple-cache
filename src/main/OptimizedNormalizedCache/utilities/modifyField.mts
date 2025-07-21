@@ -25,14 +25,12 @@ import type {
 } from '../internalTypes.mjs';
 import type {
   DataIdFromObjectFunction,
-  KeyFields,
   OptimizedReadMap,
   ReadFromIdFunction,
 } from '../types.mjs';
 import getFieldValue from './getFieldValue.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
 import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mjs';
-import makeStoreId from './makeStoreId.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
 
 type ModifierDetailsBase = Pick<
@@ -160,7 +158,6 @@ function doModify(
   fieldFunction: Modifier<unknown>,
   detailsBase: ModifierDetailsBase,
   proxyMap: WeakMap<object, object>,
-  keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined,
   optimizedRead: OptimizedReadMap,
   dataIdFromObject: DataIdFromObjectFunction,
@@ -286,9 +283,7 @@ function doModify(
       return object as unknown[];
     } // for Array
 
-    const id =
-      makeStoreId(returnValue, keyFields, supertypeMap) ||
-      makeStoreId(object, keyFields, supertypeMap);
+    const id = dataIdFromObject(returnValue) || dataIdFromObject(object);
     if (id) {
       object = rootStore[id] || (rootStore[id] = { __proto__: null });
       seenObject.add(object);
@@ -544,7 +539,6 @@ export default function modifyField<Entity extends Record<string, any>>(
   rootStore: Record<string, unknown>,
   data: object,
   fieldsData: Modifiers<Entity> | AllFieldsModifier<Entity>,
-  keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined,
   canRead: CanReadFunction,
   toReference: ToReferenceFunction,
@@ -598,7 +592,6 @@ export default function modifyField<Entity extends Record<string, any>>(
           fieldFunction as Modifier<unknown>,
           detailsBase,
           proxyMap,
-          keyFields,
           supertypeMap,
           optimizedRead,
           dataIdFromObject,
@@ -637,7 +630,6 @@ export default function modifyField<Entity extends Record<string, any>>(
         fieldFunction as Modifier<unknown>,
         detailsBase,
         proxyMap,
-        keyFields,
         supertypeMap,
         optimizedRead,
         dataIdFromObject,

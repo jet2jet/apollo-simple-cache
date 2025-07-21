@@ -10,14 +10,13 @@ import {
   type SliceFirst,
   type SupertypeMap,
 } from '../internalTypes.mjs';
-import type { KeyFields, WriteToCacheMap } from '../types.mjs';
+import type { DataIdFromObjectFunction, WriteToCacheMap } from '../types.mjs';
 import getActualTypename from './getActualTypename.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
 import isReference from './isReference.mjs';
 import makeReference from './makeReference.mjs';
-import makeStoreId from './makeStoreId.mjs';
 import markProxyDirty from './markProxyDirty.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
 import releaseDataStoreObject from './releaseDataStoreObject.mjs';
@@ -27,10 +26,10 @@ interface SetFieldValuesContext {
   rs: Record<string, unknown>;
   /** fragmentMap */
   fm: FragmentMap | undefined;
-  /** keyFields */
-  kf: KeyFields | undefined;
   /** supertypeMap */
   sm: SupertypeMap | undefined;
+  /** dataIdFromObject */
+  di: DataIdFromObjectFunction;
   /** writeToCacheMap */
   wm: WriteToCacheMap | undefined;
   /** outChangedFields */
@@ -141,7 +140,7 @@ function setFieldValuesImpl<T>(
       if (s == null || typeof s !== 'object') {
         destArray[i] = s;
       } else {
-        const id = makeStoreId(s, context.kf, context.sm);
+        const id = context.di(s);
         if (id) {
           const [merged, changed] = mergeObjectWithId(
             id,
@@ -281,9 +280,7 @@ function setFieldValuesImpl<T>(
     const subSelectionSet = fieldNode ? fieldNode.selectionSet : undefined;
 
     const id =
-      val != null && typeof val === 'object'
-        ? makeStoreId(val, context.kf, context.sm)
-        : undefined;
+      val != null && typeof val === 'object' ? context.di(val) : undefined;
     let merged: Reference | undefined;
     let existing: unknown;
     function doMerge() {
@@ -397,8 +394,8 @@ export default function setFieldValues(
   source: unknown,
   selectionSet: undefined,
   fragmentMap: undefined,
-  keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined,
+  dataIdFromObject: DataIdFromObjectFunction,
   writeToCacheMap: WriteToCacheMap | undefined,
   startPathName: string,
   outChangedFields: ChangedFieldsArray,
@@ -412,8 +409,8 @@ export default function setFieldValues(
   source: unknown,
   selectionSet: SelectionSetNode,
   fragmentMap: FragmentMap,
-  keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined,
+  dataIdFromObject: DataIdFromObjectFunction,
   writeToCacheMap: WriteToCacheMap | undefined,
   startPathName: string,
   outChangedFields: ChangedFieldsArray,
@@ -428,8 +425,8 @@ export default function setFieldValues(
   source: unknown,
   selectionSet: SelectionSetNode | undefined,
   fragmentMap: FragmentMap | undefined,
-  keyFields: KeyFields | undefined,
   supertypeMap: SupertypeMap | undefined,
+  dataIdFromObject: DataIdFromObjectFunction,
   writeToCacheMap: WriteToCacheMap | undefined,
   startPathName: string,
   outChangedFields: ChangedFieldsArray,
@@ -444,15 +441,15 @@ export default function setFieldValues(
   const context: SetFieldValuesContext = {
     rs: rootStore,
     fm: fragmentMap,
-    kf: keyFields,
     sm: supertypeMap,
     wm: writeToCacheMap,
+    di: dataIdFromObject,
     cf: outChangedFields,
     v: variables,
   };
 
   if (noStoreToRoot) {
-    const id = makeStoreId(source, keyFields, supertypeMap);
+    const id = dataIdFromObject(source);
     if (id) {
       mergeObjectWithId(id, undefined, source, undefined, context);
     }

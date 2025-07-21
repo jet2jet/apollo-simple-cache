@@ -212,7 +212,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       if (isReference(objOrIdOrRef)) {
         return objOrIdOrRef;
       }
-      const id = makeStoreId(objOrIdOrRef, this.keyFields, this.supertypeMap);
+      const id = this.dataIdFromObject(objOrIdOrRef);
       if (id == null) {
         return undefined;
       }
@@ -224,8 +224,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
           objOrIdOrRef,
           undefined,
           undefined,
-          this.keyFields,
           this.supertypeMap,
+          this.dataIdFromObject,
           this.writeToCacheMap,
           'ROOT_QUERY',
           changedFields,
@@ -329,11 +329,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
           dataId = 'ROOT_SUBSCRIPTION';
           break;
         default:
-          dataId = makeStoreId(
-            source as object,
-            this.keyFields,
-            this.supertypeMap
-          );
+          dataId = this.dataIdFromObject(source as object);
           if (!dataId) {
             return undefined;
           }
@@ -364,8 +360,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         source,
         definition.selectionSet,
         fragmentMap,
-        this.keyFields,
         this.supertypeMap,
+        this.dataIdFromObject,
         this.writeToCacheMap,
         dataId,
         changedFields,
@@ -698,7 +694,6 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         this.data,
         d,
         options.fields,
-        this.keyFields,
         this.supertypeMap,
         this.canRead,
         this.toReference,
@@ -726,7 +721,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     if (isReference(object)) {
       return object.__ref;
     }
-    return makeStoreId(object, this.keyFields, this.supertypeMap);
+    return this.dataIdFromObject(object);
   }
 
   public override gc(options?: { resetResultCache?: boolean }): string[] {
@@ -917,7 +912,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
               2,
               missingField[2],
               this.keyFields,
-              this.supertypeMap
+              this.supertypeMap,
+              this.dataIdFromObject
             )
           ) {
             mfs.splice(i);
@@ -940,7 +936,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
             2,
             missingField[2],
             this.keyFields,
-            this.supertypeMap
+            this.supertypeMap,
+            this.dataIdFromObject
           )
         ) {
           mfs.splice(i);
