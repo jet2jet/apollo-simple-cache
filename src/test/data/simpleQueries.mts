@@ -4,10 +4,12 @@ import {
   type TypedDocumentNode,
 } from '@apollo/client';
 import type {
-  LocationInputType,
-  PersonInputType,
+  LocationVariablesType,
+  PersonVariablesType,
   PersonType,
   QueryType,
+  ChangePersonVariablesType,
+  MutationType,
 } from './types.mjs';
 
 export type PersonsQuery = Pick<QueryType, '__typename' | 'persons'>;
@@ -20,6 +22,11 @@ export type LocationQuery = Pick<QueryType, '__typename' | 'location'>;
 export type LocationNamesQuery = Pick<
   QueryType,
   '__typename' | 'locationNames'
+>;
+
+export type ChangePersonMutation = Pick<
+  MutationType,
+  '__typename' | 'changePerson'
 >;
 
 export type PersonFragment = Pick<
@@ -66,7 +73,7 @@ export const PersonsDocument = gql`
 ` as unknown as TypedDocumentNode<PersonsQuery, never>;
 
 export const PersonDocument = gql`
-  query Person($id: ID!) {
+  query Person($id: Int!) {
     person(id: $id) {
       id
       name
@@ -89,16 +96,16 @@ export const PersonDocument = gql`
       }
     }
   }
-` as unknown as TypedDocumentNode<PersonQuery, PersonInputType>;
+` as unknown as TypedDocumentNode<PersonQuery, PersonVariablesType>;
 
 export const PersonSimpleDocument = gql`
-  query PersonSimple($id: ID!) {
+  query PersonSimple($id: Int!) {
     person(id: $id) {
       id
       name
     }
   }
-` as unknown as TypedDocumentNode<PersonSimpleQuery, PersonInputType>;
+` as unknown as TypedDocumentNode<PersonSimpleQuery, PersonVariablesType>;
 
 export const LocationsDocument = gql`
   query Locations {
@@ -119,7 +126,7 @@ export const LocationsDocument = gql`
 ` as unknown as TypedDocumentNode<LocationsQuery, never>;
 
 export const LocationDocument = gql`
-  query Location($id: ID!) {
+  query Location($id: Int!) {
     location(id: $id) {
       id
       ... on Prefecture {
@@ -134,7 +141,7 @@ export const LocationDocument = gql`
       }
     }
   }
-` as unknown as TypedDocumentNode<LocationQuery, LocationInputType>;
+` as unknown as TypedDocumentNode<LocationQuery, LocationVariablesType>;
 
 export const LocationNamesDocument = gql`
   query LocationNames {
@@ -177,7 +184,7 @@ export const PersonsDocumentWithFragment = gql`
 ` as unknown as TypedDocumentNode<PersonsQueryWithFragment, never>;
 
 export const PersonDocumentWithFragment = gql`
-  query Person($id: ID!) {
+  query Person($id: Int!) {
     person(id: $id) {
       id
       sha256
@@ -188,7 +195,36 @@ export const PersonDocumentWithFragment = gql`
     }
   }
   ${PersonChunkFragment}
-` as unknown as TypedDocumentNode<PersonQueryWithFragment, PersonInputType>;
+` as unknown as TypedDocumentNode<PersonQueryWithFragment, PersonVariablesType>;
+
+export const ChangePersonMutationDocument = gql`
+  mutation ChangePerson($input: PersonInput!) {
+    changePerson(input: $input) {
+      id
+      name
+      sha256
+      tags {
+        name
+      }
+      address {
+        id
+        ... on Prefecture {
+          name
+        }
+        ... on City {
+          name
+          prefecture {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+` as unknown as TypedDocumentNode<
+  ChangePersonMutation,
+  ChangePersonVariablesType
+>;
 
 export const possibleTypes: PossibleTypesMap = {
   Location: ['Prefecture', 'City'],

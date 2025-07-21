@@ -1,20 +1,28 @@
+import { cloneDeep } from '@apollo/client/utilities';
 import {
   GraphQLSchema,
   GraphQLObjectType,
-  GraphQLID,
+  GraphQLInt,
   GraphQLNonNull,
   GraphQLString,
   GraphQLList,
   type GraphQLFieldConfig,
   GraphQLInterfaceType,
+  type GraphQLNamedType,
+  GraphQLInputObjectType,
 } from 'graphql';
 import { locationsData, personsData } from './dummyData.mjs';
-import type { LocationType, PersonType, QueryType } from './types.mjs';
+import type {
+  LocationType,
+  PersonInputType,
+  PersonType,
+  QueryType,
+} from './types.mjs';
 
 const LocationType = new GraphQLInterfaceType({
   name: 'Location',
   fields: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLInt) },
   },
 });
 
@@ -22,17 +30,16 @@ const PrefectureType = new GraphQLObjectType({
   name: 'Prefecture',
   interfaces: [LocationType],
   fields: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLInt) },
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
 });
 
-// @ts-expect-error: currently unused
 const CityType = new GraphQLObjectType({
   name: 'City',
   interfaces: [LocationType],
   fields: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLInt) },
     name: { type: new GraphQLNonNull(GraphQLString) },
     prefecture: { type: new GraphQLNonNull(PrefectureType) },
   },
@@ -48,7 +55,7 @@ const TagType = new GraphQLObjectType({
 const PersonType = new GraphQLObjectType({
   name: 'Person',
   fields: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLInt) },
     name: { type: new GraphQLNonNull(GraphQLString) },
     sha256: { type: new GraphQLNonNull(GraphQLString) },
     tags: {
@@ -58,26 +65,32 @@ const PersonType = new GraphQLObjectType({
   },
 });
 
+let mutablePersonsData: PersonType[];
+
+export function resetPersonData(): void {
+  mutablePersonsData = cloneDeep(personsData) as PersonType[];
+}
+
+resetPersonData();
+
 const QueryType = new GraphQLObjectType({
   name: 'Query',
   fields: {
     persons: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(PersonType))),
-      resolve: (): readonly PersonType[] => personsData,
+      resolve: (): readonly PersonType[] => mutablePersonsData,
     },
     person: {
       type: PersonType,
       args: {
         id: {
-          type: new GraphQLNonNull(GraphQLID),
+          type: new GraphQLNonNull(GraphQLInt),
         },
       },
       resolve: (_, args: { id: number }): PersonType | null => {
         const i = isNaN(Number(args.id)) ? -1 : Number(args.id);
-        if (i < 0 || i >= personsData.length) {
-          return null;
-        }
-        return personsData[i]!;
+        const p = mutablePersonsData.find((p) => p.id === i);
+        return p || null;
       },
     },
     locations: {
@@ -90,7 +103,7 @@ const QueryType = new GraphQLObjectType({
       type: LocationType,
       args: {
         id: {
-          type: new GraphQLNonNull(GraphQLID),
+          type: new GraphQLNonNull(GraphQLInt),
         },
       },
       resolve: (_, args: { id: number }): LocationType | null => {
@@ -117,4 +130,56 @@ const QueryType = new GraphQLObjectType({
   >,
 });
 
-export const schema = new GraphQLSchema({ query: QueryType });
+const PersonInputType = new GraphQLInputObjectType({
+  name: 'PersonInput',
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLInt) },
+    name: { type: GraphQLString },
+    sha256: { type: GraphQLString },
+  },
+});
+
+const MutationType = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    changePerson: {
+      type: PersonType,
+      args: {
+        input: {
+          type: new GraphQLNonNull(PersonInputType),
+        },
+      },
+      resolve: (_, args: { input: PersonInputType }): PersonType | null => {
+        const i = isNaN(Number(args.input.id)) ? -1 : Number(args.input.id);
+        const p = mutablePersonsData.find((p) => p.id === i);
+        if (!p) {
+          return null;
+        }
+        if (args.input.name != null) {
+          p.name = args.input.name;
+        }
+        if (args.input.sha256 != null) {
+          p.sha256 = args.input.sha256;
+        }
+        return p;
+      },
+    },
+  },
+});
+
+const types: GraphQLNamedType[] = [
+  LocationType,
+  PrefectureType,
+  CityType,
+  TagType,
+  PersonType,
+  QueryType,
+  PersonInputType,
+  MutationType,
+];
+
+export const schema = new GraphQLSchema({
+  query: QueryType,
+  mutation: MutationType,
+  types,
+});

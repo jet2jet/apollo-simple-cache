@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "module": "node18",
     "moduleResolution": "node16",
     "paths": {
@@ -9,5 +10,5 @@
     "rootDir": "..",
     "target": "es2020"
   },
-  "include": ["../main/**/*.mts", "./**/*.mts"]
+  "include": ["../main/**/*.mts", "./**/*.mts", "./**/*.tsx"]
 }

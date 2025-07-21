@@ -37,11 +37,11 @@ export interface PersonSimpleType {
   address?: Readonly<LocationType> | null;
 }
 
-export interface PersonInputType {
+export interface PersonVariablesType {
   id: number;
 }
 
-export interface LocationInputType {
+export interface LocationVariablesType {
   id: number;
 }
 
@@ -52,4 +52,19 @@ export interface QueryType {
   locations: ReadonlyArray<Readonly<LocationType>>;
   location: Readonly<LocationType> | null;
   locationNames: readonly string[];
+}
+
+export interface PersonInputType {
+  id: number;
+  name?: string | null;
+  sha256?: string | null;
+}
+
+export interface ChangePersonVariablesType {
+  input: PersonInputType;
+}
+
+export interface MutationType {
+  __typename: 'Mutation';
+  changePerson: Readonly<PersonType> | null;
 }

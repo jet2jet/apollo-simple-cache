@@ -7,6 +7,7 @@ module.exports = {
     'lines-between-class-members': 'off',
     'no-dupe-class-members': 'off',
     'no-useless-constructor': 'off',
+    'no-void': ['error', { allowAsStatement: true }],
 
     'import/export': 'off',
     'import/order': [
