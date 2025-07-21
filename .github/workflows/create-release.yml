@@ -1,0 +1,39 @@
+name: Create GitHub Release from Changelog
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          BODY=$(awk "/^##[[:space:]]*${TAG_NAME//\//\\/}[[:space:]]*\$/,/^##[[:space:]]*/" CHANGELOG.md | sed '1d;$d')
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
+          if [ -n "$BODY" ]; then
+            echo "FOUND=true" >> "$GITHUB_ENV"
+            echo "RELEASE_BODY<<EOF" >> "$GITHUB_ENV"
+            echo "$BODY" >> "$GITHUB_ENV"
+            echo "EOF" >> "$GITHUB_ENV"
+          else
+            echo "FOUND=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Create GitHub Release
+        if: env.FOUND == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          body: ${{ env.RELEASE_BODY }}
