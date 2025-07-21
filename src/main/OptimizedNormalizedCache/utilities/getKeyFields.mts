@@ -23,7 +23,7 @@ export default function getKeyFields(
 
   function getKeyFieldsForTypes(
     typename: string,
-    types: Record<string, readonly string[]>
+    types: { [typename in string]?: readonly string[] }
   ): readonly string[] | undefined {
     if (types[typename]) {
       return types[typename];

@@ -23,7 +23,10 @@ export interface KeyFieldsObject {
   /** Key field names for all types */
   fields?: readonly string[];
   /** Key field names for individual types */
-  types?: Record<string, readonly string[]>;
+  types?: {
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+    readonly [typename in (string & {}) | CustomTypenames]?: readonly string[];
+  };
 }
 /** An array of key field names for all types, or {@link KeyFieldsObject} */
 export type KeyFields = readonly string[] | KeyFieldsObject;
