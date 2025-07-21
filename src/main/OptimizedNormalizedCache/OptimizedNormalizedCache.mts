@@ -70,7 +70,11 @@ type AnyVariable = any;
 
 type WatcherData = [options: Cache.WatchOptions<object>, revoked: boolean];
 
-function makeNewData(queryType: string, mutationType: string) {
+function makeNewData(
+  queryType: string,
+  mutationType: string,
+  subscriptionType: string
+) {
   return {
     __proto__: null,
     ROOT_QUERY: {
@@ -83,6 +87,11 @@ function makeNewData(queryType: string, mutationType: string) {
       __typename: mutationType,
       [SYMBOL_PROXY_ARRAY]: [],
     },
+    ROOT_SUBSCRIPTION: {
+      __proto__: null,
+      __typename: subscriptionType,
+      [SYMBOL_PROXY_ARRAY]: [],
+    },
   };
 }
 
@@ -93,6 +102,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   public data: Record<string, unknown> & {
     ROOT_QUERY: DataStoreObject;
     ROOT_MUTATION: DataStoreObject;
+    ROOT_SUBSCRIPTION: DataStoreObject;
   };
 
   // @internal
@@ -112,6 +122,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   private readonly writeToCacheMap: WriteToCacheMap;
   private readonly queryType: string;
   private readonly mutationType: string;
+  private readonly subscriptionType: string;
 
   // @internal
   public proxyCacheMap: ProxyCacheMap;
@@ -165,8 +176,14 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     this.queryType = (options.rootTypes && options.rootTypes.Query) || 'Query';
     this.mutationType =
       (options.rootTypes && options.rootTypes.Mutation) || 'Mutation';
+    this.subscriptionType =
+      (options.rootTypes && options.rootTypes.Subscription) || 'Subscription';
 
-    this.data = makeNewData(this.queryType, this.mutationType);
+    this.data = makeNewData(
+      this.queryType,
+      this.mutationType,
+      this.subscriptionType
+    );
 
     this.proxyCacheMap = new Map();
     this.proxyCacheRecords = [];
@@ -232,7 +249,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       typename =
         definition.operation === OperationTypeNode.MUTATION
           ? this.mutationType
-          : this.queryType;
+          : definition.operation === OperationTypeNode.SUBSCRIPTION
+            ? this.subscriptionType
+            : this.queryType;
     } else {
       typename = definition.typeCondition.name.value;
     }
@@ -288,7 +307,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       typename =
         definition.operation === OperationTypeNode.MUTATION
           ? this.mutationType
-          : this.queryType;
+          : definition.operation === OperationTypeNode.SUBSCRIPTION
+            ? this.subscriptionType
+            : this.queryType;
     } else {
       typename = definition.typeCondition.name.value;
     }
@@ -301,6 +322,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
           break;
         case this.mutationType:
           dataId = 'ROOT_MUTATION';
+          break;
+        case this.subscriptionType:
+          dataId = 'ROOT_SUBSCRIPTION';
           break;
         default:
           dataId = makeStoreId(
@@ -367,7 +391,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
       typename =
         definition.operation === OperationTypeNode.MUTATION
           ? this.mutationType
-          : this.queryType;
+          : definition.operation === OperationTypeNode.SUBSCRIPTION
+            ? this.subscriptionType
+            : this.queryType;
     } else {
       typename = definition.typeCondition.name.value;
     }
@@ -483,7 +509,11 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         this.watchers.splice(0);
       }
 
-      this.data = makeNewData(this.queryType, this.mutationType);
+      this.data = makeNewData(
+        this.queryType,
+        this.mutationType,
+        this.subscriptionType
+      );
       this.proxyCacheMap.clear();
       this.proxyCacheRecords.splice(0);
       this.revokedProxyRecords.splice(0);
@@ -522,7 +552,11 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         removedObjects,
         options
       );
-      if (id !== 'ROOT_QUERY' && id !== 'ROOT_MUTATION') {
+      if (
+        id !== 'ROOT_QUERY' &&
+        id !== 'ROOT_MUTATION' &&
+        id !== 'ROOT_SUBSCRIPTION'
+      ) {
         removedObjects.push(this.data[id] as object);
         changedFields.push([true, id]);
         delete this.data[id];
@@ -541,17 +575,29 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   public override restore(
     serializedState: NormalizedCacheObject
   ): ApolloCache<NormalizedCacheObject> {
-    const d: typeof this.data = makeNewData(this.queryType, this.mutationType);
+    const d: typeof this.data = makeNewData(
+      this.queryType,
+      this.mutationType,
+      this.subscriptionType
+    );
     // Pick fields with id
     for (const key in serializedState) {
-      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') {
+      if (
+        key === 'ROOT_QUERY' ||
+        key === 'ROOT_MUTATION' ||
+        key === 'ROOT_SUBSCRIPTION'
+      ) {
         continue;
       }
       d[key] = Object.assign(Object.create(null), serializedState[key]);
     }
     for (const key in serializedState) {
       const targetParent =
-        key === 'ROOT_QUERY' || key === 'ROOT_MUTATION' ? d : undefined;
+        key === 'ROOT_QUERY' ||
+        key === 'ROOT_MUTATION' ||
+        key === 'ROOT_SUBSCRIPTION'
+          ? d
+          : undefined;
       storeToObject(
         d,
         targetParent,
@@ -600,7 +646,10 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
 
   public override extract(_optimistic?: boolean): NormalizedCacheObject {
     const objectsWithId = Object.entries(this.data).filter(
-      (x) => x[0] !== 'ROOT_QUERY' && x[0] !== 'ROOT_MUTATION'
+      (x) =>
+        x[0] !== 'ROOT_QUERY' &&
+        x[0] !== 'ROOT_MUTATION' &&
+        x[0] !== 'ROOT_SUBSCRIPTION'
     ) as Array<[string, object]>;
     // Replace objects with id ref
     const rootStore = this.data;
@@ -698,7 +747,11 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     const ids: string[] = [];
 
     for (const key in this.data) {
-      if (key === 'ROOT_QUERY' || key === 'ROOT_MUTATION') {
+      if (
+        key === 'ROOT_QUERY' ||
+        key === 'ROOT_MUTATION' ||
+        key === 'ROOT_SUBSCRIPTION'
+      ) {
         continue;
       }
       const o = this.data[key];

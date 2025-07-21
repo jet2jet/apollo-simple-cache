@@ -78,5 +78,6 @@ export interface OptimizedNormalizedCacheOptions {
   rootTypes?: {
     Query?: string;
     Mutation?: string;
+    Subscription?: string;
   };
 }
