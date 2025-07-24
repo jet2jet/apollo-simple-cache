@@ -74,7 +74,8 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
   ) => CacheKey;
 
   private txCount: number;
-  private readonly watchers: Cache.WatchOptions[];
+  private readonly watchers: Map<CacheKey, Cache.WatchOptions[]>;
+  private readonly dirtyKeys: CacheKey[];
 
   /** See options for {@link SimpleDocumentCacheOptions} */
   public constructor(options?: SimpleDocumentCacheOptions) {
@@ -84,7 +85,8 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
 
     this.data = {};
     this.txCount = 0;
-    this.watchers = [];
+    this.watchers = new Map();
+    this.dirtyKeys = [];
   }
 
   public override read<TData = AnyData, TVariables = AnyVariable>(
@@ -102,10 +104,11 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       ++this.txCount;
       const key = this.getCacheKey(write.query, write.variables);
       this.data[key] = write.result as StoreObject;
+      this.dirtyKeys.push(key);
       return cacheKeyToRef(key);
     } finally {
       if (--this.txCount === 0 && write.broadcast !== false) {
-        this.broadcastAllWatchers();
+        this.broadcastDirtyWatchers();
       }
     }
   }
@@ -156,20 +159,30 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void {
     const watchObject = { ...watch };
-    this.watchers.push(watchObject);
+    const key = this.getCacheKey(watch.query, watch.variables);
+    let rec = this.watchers.get(key);
+    if (!rec) {
+      rec = [];
+      this.watchers.set(key, rec);
+    }
+    rec.push(watchObject);
     return () => {
-      const i = this.watchers.indexOf(watchObject);
+      const i = rec.indexOf(watchObject);
       if (i >= 0) {
-        this.watchers.splice(i, 1);
+        rec.splice(i, 1);
+        if (rec.length === 0) {
+          this.watchers.delete(key);
+        }
       }
     };
   }
 
   public override reset(options?: Cache.ResetOptions): Promise<void> {
     if (options?.discardWatches) {
-      this.watchers.splice(0);
+      this.watchers.clear();
     }
     this.data = {};
+    this.dirtyKeys.splice(0);
     this.broadcastAllWatchers();
     return Promise.resolve();
   }
@@ -186,6 +199,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
     serializedState: CacheObject
   ): ApolloCache<CacheObject> {
     this.data = serializedState;
+    this.dirtyKeys.splice(0);
     return this;
   }
 
@@ -213,7 +227,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       transaction(this);
     } finally {
       if (!--this.txCount) {
-        this.broadcastAllWatchers();
+        this.broadcastDirtyWatchers();
       }
     }
   }
@@ -255,9 +269,16 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
         }
         const obj = this.data[id]!;
         const r = modifyImpl(obj, this.data);
+        let mod;
         if (r === DELETE_MODIFIER) {
-          isModified = true;
+          mod = true;
           delete this.data[id];
+        } else {
+          mod = r as boolean;
+        }
+        isModified ||= mod;
+        if (mod) {
+          this.dirtyKeys.push(id);
         }
       } else {
         for (const [key, obj] of Object.entries(this.data)) {
@@ -265,9 +286,16 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
             continue;
           }
           const r = modifyImpl(obj, this.data);
+          let mod;
           if (r === DELETE_MODIFIER) {
-            isModified = true;
+            mod = true;
             delete this.data[key];
+          } else {
+            mod = r as boolean;
+          }
+          isModified ||= mod;
+          if (mod) {
+            this.dirtyKeys.push(key);
           }
         }
       }
@@ -275,14 +303,15 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       return isModified;
     } finally {
       if (!--this.txCount && broadcast !== false) {
-        this.broadcastAllWatchers();
+        this.broadcastDirtyWatchers();
       }
     }
 
     function modifyImpl(
       obj: StoreObject,
       data: DataStore
-    ): void | typeof DELETE_MODIFIER {
+    ): boolean | typeof DELETE_MODIFIER {
+      let isModified = false;
       for (const fieldName in obj) {
         const value = obj[fieldName];
         const fn = (
@@ -314,17 +343,35 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
         };
         const newValue = fn(value, details);
         if (newValue === DELETE_MODIFIER || newValue === INVALIDATE_MODIFIER) {
+          // If field is deleted or invalidated, delete entire store object to trigger refetch
           return DELETE_MODIFIER;
         } else if (value !== newValue) {
           isModified = true;
           obj[fieldName] = newValue as StoreValue;
         }
       }
+      return isModified;
     }
   }
 
   private broadcastAllWatchers() {
-    for (const w of this.watchers) {
+    for (const key of this.watchers.keys()) {
+      this.broadcastWatcher(key);
+    }
+  }
+
+  private broadcastDirtyWatchers() {
+    for (const key of this.dirtyKeys.splice(0)) {
+      this.broadcastWatcher(key);
+    }
+  }
+
+  private broadcastWatcher(key: CacheKey) {
+    const rec = this.watchers.get(key);
+    if (!rec) {
+      return;
+    }
+    for (const w of rec) {
       const lastDiff = w.lastDiff;
       const diff = this.diff(w);
       if (!equal(lastDiff, (w.lastDiff = diff))) {

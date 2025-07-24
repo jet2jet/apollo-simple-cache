@@ -237,7 +237,7 @@ export function taskWriteReadEntireAndWriteReadIndividual(
   }
 }
 
-export function taskWriteEntireAndReadIndividual(
+export function taskWriteEntireAndWriteAndReadIndividual(
   cache: ApolloCache<unknown>
 ): void {
   // Write query
@@ -248,6 +248,17 @@ export function taskWriteEntireAndReadIndividual(
       persons: personsData,
     },
   });
+  for (const p of personsData) {
+    // Write individual data
+    cache.writeQuery({
+      query: PersonDocument,
+      data: {
+        __typename: 'Query',
+        person: p,
+      },
+      variables: { id: p.id },
+    });
+  }
   cache.writeQuery({
     query: LocationsDocument,
     data: {
