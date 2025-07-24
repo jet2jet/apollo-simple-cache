@@ -100,7 +100,14 @@ function makeNewData(
     },
   };
 }
-
+/**
+ * Cache implementation with normalized cache, aiming to make performance faster than Apollo's `InMemoryCache`.
+ * @example
+ * ```ts
+ * const cache = new OptimizedNormalizedCache();
+ * const client = new ApolloClient({ cache });
+ * ```
+ */
 export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCacheObject> {
   public readonly assumeImmutableResults = true;
 
@@ -142,6 +149,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
   public readonly canRead: CanReadFunction;
   public readonly toReference: ToReferenceFunction;
 
+  /** For options, see {@link OptimizedNormalizedCacheOptions}. */
   public constructor(
     options: OptimizedNormalizedCacheOptions | undefined = {}
   ) {
