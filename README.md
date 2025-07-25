@@ -4,6 +4,8 @@ Simplified cache classes for Apollo Client.
 
 > Note: Version 4 of Apollo Client is not supported but there is a plan to support. Version 2 of Apollo Client is out-of-scope and not supported.
 
+For more performance test, please see https://github.com/jet2jet/apollo-simple-cache-test .
+
 ## Install
 
 ```
