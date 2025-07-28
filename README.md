@@ -2,8 +2,6 @@
 
 Simplified cache classes for Apollo Client.
 
-> Note: Version 4 of Apollo Client is not supported but there is a plan to support. Version 2 of Apollo Client is out-of-scope and not supported.
-
 For more performance test, please see https://github.com/jet2jet/apollo-simple-cache-test .
 
 ## Install
@@ -13,6 +11,8 @@ npm install apollo-simple-cache
 ```
 
 ## Usage
+
+> **Note: If you use Apollo Client version 4 (v4.x), please replace package name `'apollo-simple-cache'` with `'apollo-simple-cache/v4'`.**
 
 There are two cache classes in this package.
 
@@ -112,6 +112,7 @@ Overrides root type names for `Query`, `Mutation`, and `Subscription`.
 - You can make `keyFields`, `possibleTypes`, `optimizedRead`, and `writeToCacheMap` more strictly typed for type names by extending `CustomDefinition` interface as follows:
 
 ```ts
+// For Apollo Client v4, use 'apollo-simple-cache/v4' instead of 'apollo-simple-cache'.
 declare module 'apollo-simple-cache' {
   export interface CustomDefinition {
     // Include your typenames (defined in the schema) into Array type

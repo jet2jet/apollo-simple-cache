@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.0
+
+Support Apollo Client v4
+
 ## v0.1.2
 
 Fix field modification process
