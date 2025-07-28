@@ -10,13 +10,13 @@ import {
   dummyGetAllUsersData,
   dummyGetUserByIdData,
   dummyGetUserPostsData,
-} from '../../data/complexDummyData.mjs';
+} from '@/data/complexDummyData.mjs';
 import {
   GetAllUsersDocument,
   GetUserByIdDocument,
   GetUserPostsDocument,
-} from '../../data/complexQueries.mjs';
-import { locationsData, personsData } from '../../data/dummyData.mjs';
+} from '@/data/complexQueries.mjs';
+import { locationsData, personsData } from '@/data/dummyData.mjs';
 import {
   LocationNamesDocument,
   LocationsDocument,
@@ -28,8 +28,8 @@ import {
   type PersonQuery,
   type PersonsQuery,
   PersonDocumentWithFragment,
-} from '../../data/simpleQueries.mjs';
-import type { PersonType } from '../../data/types.mjs';
+} from '@/data/simpleQueries.mjs';
+import type { PersonType } from '@/data/types.mjs';
 
 export function registerTests(
   makeCache: () => ApolloCache<unknown>,

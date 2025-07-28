@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/esm-v4",
+    "paths": {
+      "@apollo/client": [
+        "../../node_modules/@apollo/client-v4/core/index.d.ts"
+      ],
+      "@apollo/client/cache": [
+        "../../node_modules/@apollo/client-v4/cache/index.d.ts"
+      ],
+      "@apollo/client/cache/core/types/common": [
+        "../../node_modules/@apollo/client-v4/cache/core/types/common.d.ts"
+      ],
+      "@apollo/client/core": [
+        "../../node_modules/@apollo/client-v4/core/index.d.ts"
+      ],
+      "@apollo/client/react": [
+        "../../node_modules/@apollo/client-v4/react/index.d.ts"
+      ],
+      "@apollo/client/utilities": [
+        "../../node_modules/@apollo/client-v4/utilities/index.d.ts"
+      ],
+      "@apollo/client/dev": [
+        "../../node_modules/@apollo/client-v4/dev/index.d.ts"
+      ]
+    },
+    "rootDir": "."
+  },
+  "include": ["./**/*.mts"]
+}

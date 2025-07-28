@@ -3,55 +3,22 @@ import {
   dummyGetAllUsersData,
   dummyGetUserByIdData,
   dummyGetUserPostsData,
-} from '../data/complexDummyData.mjs';
+} from '@/data/complexDummyData.mjs';
 import {
   GetAllUsersDocument,
   GetUserByIdDocument,
   GetUserPostsDocument,
-} from '../data/complexQueries.mjs';
-import { locationsData, personsData } from '../data/dummyData.mjs';
+} from '@/data/complexQueries.mjs';
+import { locationsData, personsData } from '@/data/dummyData.mjs';
 import {
   LocationDocument,
   LocationsDocument,
   PersonDocument,
   PersonsDocument,
   PersonSimpleDocument,
-} from '../data/simpleQueries.mjs';
+} from '@/data/simpleQueries.mjs';
 import { OptimizedNormalizedCache } from '@/index.mjs';
-
-function cloneDeep<T>(value: T): T {
-  return __cloneDeep(value, new WeakMap());
-
-  function __cloneDeep<T>(value: T, seen: WeakMap<object, object>): T {
-    if (typeof value !== 'object' || !value) {
-      return value;
-    }
-    const seenData = seen.get(value);
-    if (seenData) {
-      return seenData as T;
-    }
-    if (value instanceof Array) {
-      const r: unknown[] = [];
-      seen.set(value, r);
-      for (let i = 0, l = value.length; i < l; ++i) {
-        r[i] = __cloneDeep(value[i], seen);
-      }
-      return r as T;
-    } else {
-      const r: Record<string | symbol, unknown> = {};
-      seen.set(value, r);
-      for (const k of (
-        Object.getOwnPropertyNames(value) as Array<string | symbol>
-      ).concat(Object.getOwnPropertySymbols(value))) {
-        r[k] = __cloneDeep(
-          (value as Record<string | symbol, unknown>)[k],
-          seen
-        );
-      }
-      return r as T;
-    }
-  }
-}
+import cloneDeep from '@/utilities/cloneDeep.mjs';
 
 export function taskReadWrite(cache: ApolloCache<unknown>): void {
   let o;

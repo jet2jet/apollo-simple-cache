@@ -1,0 +1,5 @@
+// Used for @typescript-eslint
+{
+  "extends": ["../test/tsconfig.json"],
+  "include": ["./**/*.mts"]
+}

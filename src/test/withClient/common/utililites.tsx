@@ -7,7 +7,7 @@ import {
 } from '@apollo/client';
 import { graphql, print } from 'graphql';
 import { type JSX, type ReactNode, useMemo } from 'react';
-import { schema } from '../../data/simpleSchemas.mjs';
+import { schema } from '@/data/simpleSchemas.mjs';
 
 function delay(wait: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, wait));

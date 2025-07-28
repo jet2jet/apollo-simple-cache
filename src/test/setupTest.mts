@@ -1,6 +1,6 @@
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import matchers from 'jest-extended';
-import { resetPersonData } from './data/simpleSchemas.mjs';
+import { resetPersonData } from '@/data/simpleSchemas.mjs';
 
 expect.extend(matchers);
 

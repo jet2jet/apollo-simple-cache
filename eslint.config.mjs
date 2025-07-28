@@ -14,10 +14,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: {
-          defaultProject: 'tsconfig.eslint.json',
-          allowDefaultProject: ['*.mjs', '*.cjs'],
-        },
+        projectService: true,
       },
     },
     rules: {
@@ -80,7 +77,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/test/**/*'],
+    files: ['src/test-common/**/*', 'src/test/**/*', 'src/test-v4/**/*'],
     rules: {
       // In test program 'any' may appear on `expect` expressions
       '@typescript-eslint/no-unsafe-assignment': 'off',

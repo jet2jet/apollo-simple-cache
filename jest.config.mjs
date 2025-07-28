@@ -18,8 +18,8 @@ export default {
   testMatch: ['<rootDir>/src/test/**/*.test.mts'],
   setupFilesAfterEnv: ['<rootDir>/src/test/setupTest.mts'],
   moduleNameMapper: {
-    '^@/(.*)\\.mjs$': '<rootDir>/src/main/$1',
-    '^@/(.*)$': '<rootDir>/src/main/$1',
+    '^@/(.*)\\.mjs$': ['<rootDir>/src/main/$1', '<rootDir>/src/test-common/$1'],
+    '^@/(.*)$': ['<rootDir>/src/main/$1', '<rootDir>/src/test-common/$1'],
     '(.+)\\.mjs': '$1',
     '(.+)\\.jsx': '$1',
   },

@@ -7,13 +7,13 @@ import {
 import { cloneDeep } from '@apollo/client/utilities';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
-import { personsData } from '../../data/dummyData.mjs';
+import { makeWrapper } from './utililites.jsx';
+import { personsData } from '@/data/dummyData.mjs';
 import {
   ChangePersonMutationDocument,
   PersonDocument,
   PersonsDocument,
-} from '../../data/simpleQueries.mjs';
-import { makeWrapper } from './utililites.jsx';
+} from '@/data/simpleQueries.mjs';
 
 function cloneObjectWithoutTypename<T>(value: Readonly<T>): T;
 function cloneObjectWithoutTypename<T>(value: T): T;

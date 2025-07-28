@@ -1,4 +1,3 @@
-import { cloneDeep } from '@apollo/client/utilities';
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -11,6 +10,7 @@ import {
   type GraphQLNamedType,
   GraphQLInputObjectType,
 } from 'graphql';
+import cloneDeep from '../utilities/cloneDeep.mjs';
 import { locationsData, personsData } from './dummyData.mjs';
 import type {
   LocationType,

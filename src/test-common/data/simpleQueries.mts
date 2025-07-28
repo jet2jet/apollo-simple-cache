@@ -12,6 +12,9 @@ import type {
   MutationType,
 } from './types.mjs';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type NoVariables = {};
+
 export type PersonsQuery = Pick<QueryType, '__typename' | 'persons'>;
 export type PersonQuery = Pick<QueryType, '__typename' | 'person'>;
 export type PersonSimpleQuery = Pick<QueryType, '__typename'> & {
@@ -70,7 +73,7 @@ export const PersonsDocument = gql`
       }
     }
   }
-` as unknown as TypedDocumentNode<PersonsQuery, never>;
+` as unknown as TypedDocumentNode<PersonsQuery, NoVariables>;
 
 export const PersonDocument = gql`
   query Person($id: Int!) {
@@ -123,7 +126,7 @@ export const LocationsDocument = gql`
       }
     }
   }
-` as unknown as TypedDocumentNode<LocationsQuery, never>;
+` as unknown as TypedDocumentNode<LocationsQuery, NoVariables>;
 
 export const LocationDocument = gql`
   query Location($id: Int!) {
@@ -147,7 +150,7 @@ export const LocationNamesDocument = gql`
   query LocationNames {
     locationNames
   }
-` as unknown as TypedDocumentNode<LocationNamesQuery, never>;
+` as unknown as TypedDocumentNode<LocationNamesQuery, NoVariables>;
 
 export const PersonChunkFragment = gql`
   fragment PersonChunk on Person {
@@ -167,7 +170,7 @@ export const PersonChunkFragment = gql`
       }
     }
   }
-` as unknown as TypedDocumentNode<PersonFragment, never>;
+` as unknown as TypedDocumentNode<PersonFragment, NoVariables>;
 
 export const PersonsDocumentWithFragment = gql`
   query Persons {
@@ -181,7 +184,7 @@ export const PersonsDocumentWithFragment = gql`
     }
   }
   ${PersonChunkFragment}
-` as unknown as TypedDocumentNode<PersonsQueryWithFragment, never>;
+` as unknown as TypedDocumentNode<PersonsQueryWithFragment, NoVariables>;
 
 export const PersonDocumentWithFragment = gql`
   query Person($id: Int!) {
