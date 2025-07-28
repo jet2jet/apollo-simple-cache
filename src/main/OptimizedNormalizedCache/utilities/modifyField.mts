@@ -644,6 +644,7 @@ export default function modifyField<Entity extends Record<string, any>>(
         modifiedValue === INVALIDATE_MODIFIER
       ) {
         modified = true;
+        delete (data as Record<string, unknown>)[fieldName];
         const newPath = currentPath.slice() as typeof currentPath;
         // mark as deleted
         newPath[0] = true;

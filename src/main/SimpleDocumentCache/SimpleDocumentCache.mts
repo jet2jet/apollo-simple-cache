@@ -274,7 +274,10 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
           mod = true;
           delete this.data[id];
         } else {
-          mod = r as boolean;
+          mod = r !== undefined;
+          if (mod) {
+            this.data[id] = r as StoreObject;
+          }
         }
         isModified ||= mod;
         if (mod) {
@@ -291,7 +294,10 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
             mod = true;
             delete this.data[key];
           } else {
-            mod = r as boolean;
+            mod = r !== undefined;
+            if (mod) {
+              this.data[key] = r as StoreObject;
+            }
           }
           isModified ||= mod;
           if (mod) {
@@ -310,14 +316,16 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
     function modifyImpl(
       obj: StoreObject,
       data: DataStore
-    ): boolean | typeof DELETE_MODIFIER {
+    ): StoreObject | typeof DELETE_MODIFIER | undefined {
       let isModified = false;
+      const newObj: StoreObject = {};
       for (const fieldName in obj) {
         const value = obj[fieldName];
         const fn = (
           typeof fields === 'function' ? fields : fields[fieldName]
         ) as Modifier<unknown> | undefined;
         if (fn == null) {
+          newObj[fieldName] = value;
           continue;
         }
         const details: ModifierDetails = {
@@ -345,12 +353,12 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
         if (newValue === DELETE_MODIFIER || newValue === INVALIDATE_MODIFIER) {
           // If field is deleted or invalidated, delete entire store object to trigger refetch
           return DELETE_MODIFIER;
-        } else if (value !== newValue) {
+        } else if (!equal(value, newValue)) {
           isModified = true;
-          obj[fieldName] = newValue as StoreValue;
         }
+        newObj[fieldName] = newValue as StoreValue;
       }
-      return isModified;
+      return isModified ? newObj : undefined;
     }
   }
 

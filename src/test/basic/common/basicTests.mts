@@ -576,7 +576,82 @@ export function registerTests(
     ).toThrow(MissingFieldError);
   });
 
+  test('delete entire data and will fail to read query (missing error)', () => {
+    const cache = makeCache();
+
+    const personDocument = cache.transformDocument(
+      PersonDocument
+    ) as typeof PersonDocument;
+
+    const person = personsData[0]!;
+
+    cache.writeQuery({
+      query: personDocument,
+      variables: { id: person.id },
+      data: { __typename: 'Query', person },
+    });
+
+    cache.modify({
+      fields: {
+        person: (value: unknown, details) => {
+          if (!value) {
+            return value;
+          }
+          if (
+            details.readField('id', value as Reference | StoreObject) ===
+            person.id
+          ) {
+            return details.DELETE;
+          }
+          return value;
+        },
+      },
+    });
+
+    expect(() => {
+      cache.diff({
+        query: personDocument,
+        variables: { id: person.id },
+        optimistic: false,
+        returnPartialData: false,
+      });
+    }).toThrow(MissingFieldError);
+  });
+
   if (cacheType === 'normalized') {
+    test('delete field and will fail to read query (missing error)', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        variables: { id: person.id },
+        data: { __typename: 'Query', person },
+      });
+
+      cache.modify({
+        id: cache.identify(person),
+        fields: {
+          name: (_, details) => {
+            return details.DELETE;
+          },
+        },
+      });
+      expect(() => {
+        cache.diff({
+          query: personDocument,
+          variables: { id: person.id },
+          optimistic: false,
+          returnPartialData: false,
+        });
+      }).toThrow(MissingFieldError);
+    });
+
     test('evict data and receive watch callback', () => {
       const cache = makeCache();
 
