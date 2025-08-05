@@ -64,6 +64,7 @@ import getFragmentMap from './utilities/getFragmentMap.mjs';
 import getMissingFields from './utilities/getMissingFields.mjs';
 import isObjectUsing from './utilities/isObjectUsing.mjs';
 import isWatchingFields from './utilities/isWatchingFields.mjs';
+import isWatchingIdFields from './utilities/isWatchingIdFields.mjs';
 import makeReference from './utilities/makeReference.mjs';
 import makeStoreId from './utilities/makeStoreId.mjs';
 import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mjs';
@@ -933,6 +934,7 @@ export default class OptimizedNormalizedCache extends ApolloCache {
       [[], []]
     );
 
+    const dirtyMissings: MissingFieldRecord[] = [];
     for (let l = rootFields.length, j = 0; j < l; ++j) {
       const changedFields = rootFields[j]!;
       const isDeleted = changedFields[0];
@@ -957,6 +959,7 @@ export default class OptimizedNormalizedCache extends ApolloCache {
               this.dataIdFromObject
             )
           ) {
+            dirtyMissings.push(missingField);
             mfs.splice(i);
           }
         }
@@ -981,15 +984,68 @@ export default class OptimizedNormalizedCache extends ApolloCache {
             this.dataIdFromObject
           )
         ) {
+          dirtyMissings.push(missingField);
+          mfs.splice(i);
+        }
+      }
+    }
+    for (let l = idFields.length, j = 0; j < l; ++j) {
+      const changedFields = idFields[j]!;
+      const isDeleted = changedFields[0];
+      if (isDeleted) {
+        for (
+          let mfs = this.missingFieldsNothing, i = mfs.length - 1;
+          i >= 0;
+          --i
+        ) {
+          const missingField = mfs[i]!;
+          if (
+            isWatchingIdFields(
+              this.data,
+              missingField[0],
+              missingField[1],
+              changedFields,
+              idFields,
+              missingField[2],
+              this.keyFields,
+              this.supertypeMap,
+              this.dataIdFromObject
+            )
+          ) {
+            dirtyMissings.push(missingField);
+            mfs.splice(i);
+          }
+        }
+      }
+      for (
+        let mfs = this.missingFieldsExisting, i = mfs.length - 1;
+        i >= 0;
+        --i
+      ) {
+        const missingField = mfs[i]!;
+        if (
+          isWatchingIdFields(
+            this.data,
+            missingField[0],
+            missingField[1],
+            changedFields,
+            idFields,
+            missingField[2],
+            this.keyFields,
+            this.supertypeMap,
+            this.dataIdFromObject
+          )
+        ) {
+          dirtyMissings.push(missingField);
           mfs.splice(i);
         }
       }
     }
 
-    this.releaseProxyForWatchers();
+    this.releaseProxyForWatchers(dirtyMissings);
   }
 
-  private releaseProxyForWatchers() {
+  private releaseProxyForWatchers(dirtyMissings: MissingFieldRecord[]) {
     for (let wt = this.watchers, l = wt.length, i = 0; i < l; ++i) {
       const data = wt[i]!;
       if (data[1]) {
@@ -1003,6 +1059,19 @@ export default class OptimizedNormalizedCache extends ApolloCache {
         w.lastDiff = undefined;
         data[1] = true;
         continue;
+      }
+
+      const definition = getMainDefinition(w.query);
+      const variableString = variablesToString(w.variables);
+
+      if (
+        dirtyMissings.some(
+          (missingField) =>
+            missingField[0] === definition.selectionSet &&
+            missingField[3] === variableString
+        )
+      ) {
+        proxy[PROXY_SYMBOL_DIRTY] = true;
       }
 
       if (proxy[PROXY_SYMBOL_DIRTY]) {

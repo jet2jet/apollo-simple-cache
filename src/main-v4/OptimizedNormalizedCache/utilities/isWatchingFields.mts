@@ -11,6 +11,7 @@ import type { DataIdFromObjectFunction, KeyFields } from '../types.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 import getEffectiveArguments from './getEffectiveArguments.mjs';
 import getFieldValue from './getFieldValue.mjs';
+import isReference from './isReference.mjs';
 
 function noop(): never {
   throw new Error();
@@ -81,7 +82,7 @@ export default function isWatchingFields(
 
     // Check idFields
     if (value && typeof value === 'object') {
-      const id = dataIdFromObject(value);
+      const id = isReference(value) ? value.__ref : dataIdFromObject(value);
       if (id) {
         for (const idField of idFields) {
           if (idField[1] === id) {

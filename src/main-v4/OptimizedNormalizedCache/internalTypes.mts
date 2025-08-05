@@ -54,6 +54,9 @@ export type ChangedFields = [
 ];
 
 // @internal
+export type ChangedFieldsPathPart = SliceFirst<SliceFirst<ChangedFields>>;
+
+// @internal
 export type ChangedFieldsArray = ChangedFields[];
 
 // @internal

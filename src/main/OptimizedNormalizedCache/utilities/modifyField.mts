@@ -21,8 +21,10 @@ import variablesToString from '../../utilities/variablesToString.mjs';
 import type {
   ChangedFields,
   ChangedFieldsArray,
+  ChangedFieldsPathPart,
   SupertypeMap,
 } from '../internalTypes.mjs';
+import recordCurrentObject from '../proxyObjects/recordCurrentObject.mjs';
 import type {
   DataIdFromObjectFunction,
   OptimizedReadMap,
@@ -254,14 +256,22 @@ function doModify(
         const o: unknown = object[i];
         const v: unknown = returnValue[i];
         if (v === DELETE_MODIFIER || v === INVALIDATE_MODIFIER) {
+          recordCurrentObject(o);
           object.splice(i, 1);
           modified = true;
           if (currentPath) {
-            outChangedFields.push(currentPath);
+            outChangedFields.push([
+              true,
+              ...(currentPath.slice(1) as [
+                ChangedFields[1],
+                ...ChangedFieldsPathPart,
+              ]),
+            ]);
             currentPath = undefined;
           }
         } else if (v == null || typeof v !== 'object') {
           if (o !== v) {
+            recordCurrentObject(o);
             modified = true;
             if (currentPath) {
               outChangedFields.push(currentPath);
@@ -313,9 +323,12 @@ function doModify(
                 ? (returnValue as Record<string, unknown>)[storeFieldName]
                 : DELETE_MODIFIER;
             let mod = false;
+            let del = false;
             if (r === DELETE_MODIFIER || r === INVALIDATE_MODIFIER) {
+              recordCurrentObject(record[1]);
               records.splice(i, 1);
               mod = true;
+              del = true;
             } else if (r != null && typeof r === 'object') {
               const o = record[1];
               if (o == null || typeof o !== 'object') {
@@ -340,10 +353,21 @@ function doModify(
 
             modified ||= mod;
             if (mod && currentPath) {
-              outChangedFields.push([
-                ...currentPath,
-                [actualFieldName, record[0]],
-              ]);
+              if (del) {
+                outChangedFields.push([
+                  true,
+                  ...(currentPath.slice(1) as [
+                    ChangedFields[1],
+                    ...ChangedFieldsPathPart,
+                  ]),
+                  [actualFieldName, record[0]],
+                ]);
+              } else {
+                outChangedFields.push([
+                  ...currentPath,
+                  [actualFieldName, record[0]],
+                ]);
+              }
             }
           }
         }
@@ -357,10 +381,13 @@ function doModify(
             ? (returnValue as Record<string, unknown>)[key]
             : DELETE_MODIFIER;
         let mod = false;
+        let del = false;
 
         if (r === DELETE_MODIFIER || r === INVALIDATE_MODIFIER) {
+          recordCurrentObject(v);
           delete (object as Record<string, unknown>)[key];
           mod = true;
+          del = true;
         } else if (r != null && typeof r === 'object') {
           if (v == null || typeof v !== 'object') {
             mod = true;
@@ -385,7 +412,18 @@ function doModify(
 
         modified ||= mod;
         if (mod && currentPath) {
-          outChangedFields.push([...currentPath, key]);
+          if (del) {
+            outChangedFields.push([
+              true,
+              ...(currentPath.slice(1) as [
+                ChangedFields[1],
+                ...ChangedFieldsPathPart,
+              ]),
+              key,
+            ]);
+          } else {
+            outChangedFields.push([...currentPath, key]);
+          }
         }
       }
     }
@@ -605,6 +643,7 @@ export default function modifyField<Entity extends Record<string, any>>(
           modifiedValue === DELETE_MODIFIER ||
           modifiedValue === INVALIDATE_MODIFIER
         ) {
+          recordCurrentObject(data);
           modified = true;
           records.splice(i, 1);
           const newPath = currentPath.slice() as typeof currentPath;
@@ -643,6 +682,7 @@ export default function modifyField<Entity extends Record<string, any>>(
         modifiedValue === DELETE_MODIFIER ||
         modifiedValue === INVALIDATE_MODIFIER
       ) {
+        recordCurrentObject(data);
         modified = true;
         delete (data as Record<string, unknown>)[fieldName];
         const newPath = currentPath.slice() as typeof currentPath;

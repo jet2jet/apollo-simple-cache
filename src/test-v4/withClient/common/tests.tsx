@@ -1,14 +1,17 @@
 import { ApolloCache } from '@apollo/client';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useEffect, useRef } from 'react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { makeWrapper } from './utililites.jsx';
 import { personsData } from '@/data/dummyData.mjs';
 import {
   ChangePersonMutationDocument,
+  ChangePersonOnlyMutationDocument,
   PersonDocument,
   PersonsDocument,
+  type PersonQuery,
 } from '@/data/simpleQueries.mjs';
+import type { PersonType } from '@/data/types.mjs';
 import cloneDeep from '@/utilities/cloneDeep.mjs';
 
 function cloneObjectWithoutTypename<T>(value: Readonly<T>): T;
@@ -123,6 +126,133 @@ export function registerTests(
           [person, { ...person, name: 'Hello' }],
           [personWithoutTypename, { ...personWithoutTypename, name: 'Hello' }],
         ])
+      );
+    });
+  });
+
+  test('modify cache and re-retrieve', async () => {
+    const cache = makeCache();
+
+    const person = personsData[0]!;
+    const personWithoutTypename = cloneObjectWithoutTypename(person);
+
+    const PERSON_ID = person.id;
+
+    interface TestStepData {
+      testStep: number;
+      doNextStep: () => void;
+      data: PersonQuery | null;
+    }
+
+    const { result } = renderHook(
+      (): TestStepData => {
+        const [testStep, setTestStep] = useState(0);
+        const refIsFirstOnStep = useRef(true);
+        const doNextStep = useCallback(() => {
+          setTestStep((prev) => prev + 1);
+          refIsFirstOnStep.current = true;
+        }, []);
+        const client = useApolloClient();
+        const r = useQuery(PersonDocument, { variables: { id: PERSON_ID } });
+        const [mutate] = useMutation(ChangePersonOnlyMutationDocument);
+        const [result, setResult] = useState<Exclude<
+          typeof r.data,
+          undefined
+        > | null>(null);
+        useEffect(() => {
+          switch (testStep) {
+            case 0:
+              setResult(r.data ?? null);
+              break;
+            case 1: {
+              if (!refIsFirstOnStep.current) {
+                break;
+              }
+              void mutate({
+                variables: {
+                  input: {
+                    id: PERSON_ID,
+                    name: 'Hello',
+                  },
+                },
+                update: (cache) => {
+                  const id = cache.identify({
+                    __typename: 'Person',
+                    id: PERSON_ID,
+                  });
+                  if (id) {
+                    cache.modify({
+                      id,
+                      fields: {
+                        name: (_, details) => details.DELETE,
+                      },
+                    });
+                  } else {
+                    cache.modify({
+                      fields: {
+                        person: (value: unknown, details) => {
+                          if (
+                            !value ||
+                            (value as PersonType).id !== PERSON_ID
+                          ) {
+                            return value;
+                          }
+                          // Mark as deleted for entire entity
+                          return details.DELETE;
+                        },
+                      },
+                    });
+                  }
+                },
+              });
+              setResult(r.data ?? null);
+              break;
+            }
+            case 2:
+              setResult(r.data ?? null);
+              break;
+          }
+          refIsFirstOnStep.current = false;
+        }, [client, r.data, testStep]);
+        return {
+          testStep,
+          doNextStep,
+          data: result,
+        };
+      },
+      {
+        wrapper: makeWrapper(cache),
+      }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.doNextStep();
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(
+        expect.objectContaining({
+          person: expect.toBeOneOf([person, personWithoutTypename]),
+        })
+      );
+    });
+
+    act(() => {
+      result.current.doNextStep();
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(
+        expect.objectContaining({
+          person: expect.toBeOneOf([
+            { ...person, name: 'Hello' },
+            { ...personWithoutTypename, name: 'Hello' },
+          ]),
+        })
       );
     });
   });

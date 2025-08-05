@@ -1,3 +1,4 @@
+import { isReference } from '@apollo/client';
 import type { SelectionSetNode } from 'graphql';
 import equal from '../../utilities/equal.mjs';
 import type {
@@ -81,7 +82,7 @@ export default function isWatchingFields(
 
     // Check idFields
     if (value && typeof value === 'object') {
-      const id = dataIdFromObject(value);
+      const id = isReference(value) ? value.__ref : dataIdFromObject(value);
       if (id) {
         for (const idField of idFields) {
           if (idField[1] === id) {

@@ -64,7 +64,12 @@ export interface ChangePersonVariablesType {
   input: PersonInputType;
 }
 
+export interface ChangePersonOnlyVariablesType {
+  input: PersonInputType;
+}
+
 export interface MutationType {
   __typename: 'Mutation';
   changePerson: Readonly<PersonType> | null;
+  changePersonOnly: string | null;
 }

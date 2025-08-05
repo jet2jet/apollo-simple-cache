@@ -15,8 +15,8 @@ export default function isObjectUsing(
   if (object === current) {
     return true;
   }
-  if (isReference(object)) {
-    return object.__ref === id;
+  if (isReference(current)) {
+    return current.__ref === id;
   }
   for (const key in current) {
     if (isRoot && key === id) {

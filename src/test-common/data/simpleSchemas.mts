@@ -164,6 +164,28 @@ const MutationType = new GraphQLObjectType({
         return p;
       },
     },
+    changePersonOnly: {
+      type: GraphQLString,
+      args: {
+        input: {
+          type: new GraphQLNonNull(PersonInputType),
+        },
+      },
+      resolve: (_, args: { input: PersonInputType }): string | null => {
+        const i = isNaN(Number(args.input.id)) ? -1 : Number(args.input.id);
+        const p = mutablePersonsData.find((p) => p.id === i);
+        if (!p) {
+          return null;
+        }
+        if (args.input.name != null) {
+          p.name = args.input.name;
+        }
+        if (args.input.sha256 != null) {
+          p.sha256 = args.input.sha256;
+        }
+        return null;
+      },
+    },
   },
 });
 

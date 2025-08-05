@@ -10,6 +10,7 @@ import type {
   QueryType,
   ChangePersonVariablesType,
   MutationType,
+  ChangePersonOnlyVariablesType,
 } from './types.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -30,6 +31,11 @@ export type LocationNamesQuery = Pick<
 export type ChangePersonMutation = Pick<
   MutationType,
   '__typename' | 'changePerson'
+>;
+
+export type ChangePersonOnlyMutation = Pick<
+  MutationType,
+  '__typename' | 'changePersonOnly'
 >;
 
 export type PersonFragment = Pick<
@@ -227,6 +233,15 @@ export const ChangePersonMutationDocument = gql`
 ` as unknown as TypedDocumentNode<
   ChangePersonMutation,
   ChangePersonVariablesType
+>;
+
+export const ChangePersonOnlyMutationDocument = gql`
+  mutation ChangePersonOnly($input: PersonInput!) {
+    changePersonOnly(input: $input)
+  }
+` as unknown as TypedDocumentNode<
+  ChangePersonOnlyMutation,
+  ChangePersonOnlyVariablesType
 >;
 
 export const possibleTypes: PossibleTypesMap = {
