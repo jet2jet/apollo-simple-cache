@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1
+
+Fix for cache modification, in case of field deletion
+
 ## v0.2.0
 
 Support Apollo Client v4
