@@ -388,7 +388,9 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     }
   }
 
-  public override diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+  public override diff<TData = AnyData, TVariables = AnyVariable>(
+    query: Cache.DiffOptions<TData, TVariables>
+  ): DataProxy.DiffResult<TData> {
     const definition = getMainDefinition(query.query);
     const fragmentMap = getFragmentMap(query.query);
     const variableString = variablesToString(query.variables);
@@ -423,7 +425,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         fragmentMap,
         query.variables,
         variableString
-      ) as T | null;
+      ) as TData | null;
       if (missing.length > 0) {
         return {
           complete: false,
@@ -471,7 +473,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
         fragmentMap,
         query.variables,
         variableString
-      ) as T | null;
+      ) as TData | null;
       if (!proxy) {
         return {
           complete: false,

@@ -113,10 +113,12 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
     }
   }
 
-  public override diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+  public override diff<TData = AnyData, TVariables = AnyVariable>(
+    query: Cache.DiffOptions<TData, TVariables>
+  ): DataProxy.DiffResult<TData> {
     if (query.previousResult && isReference(query.previousResult)) {
       const key = refToCacheKey(query.previousResult);
-      const data = this.data[key] as T | undefined;
+      const data = this.data[key] as TData | undefined;
       if (data !== undefined) {
         return {
           complete: true,
@@ -125,7 +127,7 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       }
     }
     const key = this.getCacheKey(query.query, query.variables);
-    const data = this.data[key] as T | undefined;
+    const data = this.data[key] as TData | undefined;
     if (data === undefined) {
       if (query.returnPartialData !== false) {
         return {
