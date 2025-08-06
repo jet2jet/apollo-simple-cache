@@ -1,4 +1,5 @@
 import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mjs';
+import recordProxyObject from '../proxyObjects/recordProxyObject.mjs';
 import {
   PROXY_SYMBOL_DIRTY,
   PROXY_SYMBOL_FRAGMENT_MAP,
@@ -6,6 +7,7 @@ import {
 } from '../proxyObjects/types.mjs';
 import getCachedSelections from './getCachedSelections.mjs';
 
+/** If fieldName is missing, record current snapshot */
 // @internal
 export default function markProxyDirty(
   object: DataStoreObject,
@@ -33,6 +35,8 @@ export default function markProxyDirty(
         if (!found) {
           continue;
         }
+      } else {
+        recordProxyObject(proxy);
       }
       proxy[PROXY_SYMBOL_DIRTY] = true;
       rec.splice(i, 1);

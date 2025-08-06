@@ -1,6 +1,7 @@
 import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mjs';
-import proxyObjectGetter from './proxyObjectGetter.mjs';
+import recordProxyObject from './recordProxyObject.mjs';
 
+// @internal
 export default function recordCurrentObject(dataStoreObject: unknown): void {
   if (!dataStoreObject || typeof dataStoreObject !== 'object') {
     return;
@@ -11,9 +12,6 @@ export default function recordCurrentObject(dataStoreObject: unknown): void {
   }
   for (let i = 0, l = proxies.length; i < l; ++i) {
     const proxy = proxies[i]!;
-    for (const key in proxy) {
-      // call getter to update caches
-      proxyObjectGetter(proxy, key);
-    }
+    recordProxyObject(proxy);
   }
 }

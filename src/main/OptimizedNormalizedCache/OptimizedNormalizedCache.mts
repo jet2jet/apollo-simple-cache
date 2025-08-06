@@ -34,6 +34,7 @@ import {
 } from './internalTypes.mjs';
 import isProxyObject from './proxyObjects/isProxyObject.mjs';
 import makeProxyObject from './proxyObjects/makeProxyObject.mjs';
+import recordProxyObject from './proxyObjects/recordProxyObject.mjs';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_DIRTY,
@@ -754,8 +755,8 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
     for (let l = ids.length, i = 0; i < l; ++i) {
       const key = ids[i]!;
       const o = this.data[key];
-      delete this.data[key];
       releaseDataStoreObject(o);
+      delete this.data[key];
     }
 
     if (options && options.resetResultCache) {
@@ -1044,6 +1045,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
             (!isComplete || missingField[4].length === 0)
         )
       ) {
+        recordProxyObject(proxy);
         proxy[PROXY_SYMBOL_DIRTY] = true;
       }
 

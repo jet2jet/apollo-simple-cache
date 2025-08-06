@@ -785,8 +785,8 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     for (let l = ids.length, i = 0; i < l; ++i) {
       const key = ids[i]!;
       const o = this.data[key];
-      delete this.data[key];
       releaseDataStoreObject(o);
+      delete this.data[key];
     }
 
     if (options && options.resetResultCache) {
