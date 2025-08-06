@@ -929,7 +929,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
             )
           ) {
             dirtyMissings.push(missingField);
-            mfs.splice(i);
+            mfs.splice(i, 1);
           }
         }
       }
@@ -954,7 +954,7 @@ export default class OptimizedNormalizedCache extends ApolloCache<NormalizedCach
           )
         ) {
           dirtyMissings.push(missingField);
-          mfs.splice(i);
+          mfs.splice(i, 1);
         }
       }
     }
