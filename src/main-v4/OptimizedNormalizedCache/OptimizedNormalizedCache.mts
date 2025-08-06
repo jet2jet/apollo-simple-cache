@@ -1061,6 +1061,7 @@ export default class OptimizedNormalizedCache extends ApolloCache {
         continue;
       }
 
+      const isComplete = w.lastDiff && w.lastDiff.complete;
       const definition = getMainDefinition(w.query);
       const variableString = variablesToString(w.variables);
 
@@ -1068,7 +1069,10 @@ export default class OptimizedNormalizedCache extends ApolloCache {
         dirtyMissings.some(
           (missingField) =>
             missingField[0] === definition.selectionSet &&
-            missingField[3] === variableString
+            missingField[3] === variableString &&
+            // If diff is not complete, it should be dirty.
+            // If diff is complete but 'no missing field' is changed, it should also be dirty.
+            (!isComplete || missingField[4].length === 0)
         )
       ) {
         proxy[PROXY_SYMBOL_DIRTY] = true;

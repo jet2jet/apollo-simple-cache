@@ -21,6 +21,9 @@ export type PersonQuery = Pick<QueryType, '__typename' | 'person'>;
 export type PersonSimpleQuery = Pick<QueryType, '__typename'> & {
   person: Pick<PersonType, '__typename' | 'id' | 'name'>;
 };
+export type PersonSimple2Query = Pick<QueryType, '__typename'> & {
+  person: Pick<PersonType, '__typename' | 'id' | 'sha256'>;
+};
 export type LocationsQuery = Pick<QueryType, '__typename' | 'locations'>;
 export type LocationQuery = Pick<QueryType, '__typename' | 'location'>;
 export type LocationNamesQuery = Pick<
@@ -115,6 +118,15 @@ export const PersonSimpleDocument = gql`
     }
   }
 ` as unknown as TypedDocumentNode<PersonSimpleQuery, PersonVariablesType>;
+
+export const PersonSimple2Document = gql`
+  query PersonSimple2($id: Int!) {
+    person(id: $id) {
+      id
+      sha256
+    }
+  }
+` as unknown as TypedDocumentNode<PersonSimple2Query, PersonVariablesType>;
 
 export const LocationsDocument = gql`
   query Locations {

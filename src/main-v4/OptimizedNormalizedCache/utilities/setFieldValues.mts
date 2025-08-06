@@ -67,6 +67,14 @@ function isEqualChangedFields(a: ChangedFields, b: ChangedFields) {
   return true;
 }
 
+function isEqualObjectRef(a: unknown, b: unknown) {
+  if (isReference(a)) {
+    return isReference(b) && a.__ref === b.__ref;
+  } else {
+    return a === b;
+  }
+}
+
 function pushChangedFields(
   outChangedFields: ChangedFieldsArray,
   path: ChangedFields | undefined
@@ -167,7 +175,7 @@ function setFieldValuesImpl<T>(
           destArray[i] = returnValue;
         }
       }
-      if (destArray[i] !== e) {
+      if (!isEqualObjectRef(destArray[i], e)) {
         if (e && typeof e === 'object') {
           releaseDataStoreObject(e as DataStoreObject);
         }
@@ -324,7 +332,7 @@ function setFieldValuesImpl<T>(
           );
           changed ||= changed2;
         }
-        if (existing !== record[1]) {
+        if (!isEqualObjectRef(existing, record[1])) {
           changed = true;
           if (existing && typeof existing === 'object') {
             releaseDataStoreObject(existing as DataStoreObject);
@@ -364,7 +372,7 @@ function setFieldValuesImpl<T>(
         );
         changed ||= changed2;
       }
-      if (destination[name] !== existing) {
+      if (!isEqualObjectRef(destination[name], existing)) {
         changed = true;
         if (existing && typeof existing === 'object') {
           releaseDataStoreObject(existing as DataStoreObject);
@@ -372,7 +380,7 @@ function setFieldValuesImpl<T>(
       }
     }
     if (changed) {
-      markProxyDirty(destination);
+      markProxyDirty(destination, name);
     }
     return changed;
   }

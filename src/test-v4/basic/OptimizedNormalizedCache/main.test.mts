@@ -1,15 +1,125 @@
+import type { Cache } from '@apollo/client';
 import { jest } from '@jest/globals';
 import { registerTests } from '../common/basicTests.mjs';
 import { personsData } from '@/data/dummyData.mjs';
 import {
   PersonDocument,
   PersonsDocument,
+  PersonSimple2Document,
+  PersonSimpleDocument,
   possibleTypes,
+  type PersonSimpleQuery,
 } from '@/data/simpleQueries.mjs';
 import OptimizedNormalizedCache from '@/OptimizedNormalizedCache/index.mjs';
 
 describe('OptimizedNormalizedCache without possibleTypes', () => {
   registerTests(() => new OptimizedNormalizedCache(), 'normalized');
+
+  test('will not affect queries on same field', () => {
+    const cache = new OptimizedNormalizedCache();
+    const personSimpleDocument = cache.transformDocument(
+      PersonSimpleDocument
+    ) as typeof PersonSimpleDocument;
+    const personSimple2Document = cache.transformDocument(
+      PersonSimple2Document
+    ) as typeof PersonSimple2Document;
+
+    const personData = personsData[0]!;
+    const PERSON_ID = personData.id;
+
+    const fnCallbackPersonSimple =
+      jest.fn<Cache.WatchCallback<PersonSimpleQuery>>();
+
+    cache.watch({
+      query: personSimpleDocument,
+      variables: { id: PERSON_ID },
+      optimistic: false,
+      returnPartialData: true,
+      callback: fnCallbackPersonSimple,
+    });
+
+    expect(
+      cache.diff({
+        query: personSimpleDocument,
+        variables: { id: PERSON_ID },
+        optimistic: false,
+        returnPartialData: true,
+      })
+    ).toEqual({
+      result: { __typename: 'Query' },
+      complete: false,
+      missing: expect.anything(),
+    });
+
+    cache.write({
+      query: personSimpleDocument,
+      variables: { id: PERSON_ID },
+      result: {
+        __typename: 'Query',
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          name: personData.name,
+        },
+      },
+    });
+    expect(fnCallbackPersonSimple).toHaveBeenCalled();
+    fnCallbackPersonSimple.mockClear();
+    const personSimpleDiff = cache.diff({
+      query: personSimpleDocument,
+      variables: { id: PERSON_ID },
+      optimistic: false,
+      returnPartialData: true,
+    });
+    let person: unknown = personSimpleDiff.result?.person;
+
+    cache.write({
+      query: personSimple2Document,
+      variables: { id: PERSON_ID },
+      result: {
+        __typename: 'Query',
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          sha256: personData.sha256,
+        },
+      },
+    });
+    const personSimple2Diff = cache.diff({
+      query: personSimple2Document,
+      variables: { id: PERSON_ID },
+      optimistic: false,
+      returnPartialData: true,
+    });
+    person = personSimple2Diff.result?.person;
+    // should not be affected by personSimple2
+    expect(fnCallbackPersonSimple).not.toHaveBeenCalled();
+
+    expect(personSimpleDiff).toEqual({
+      result: expect.objectContaining({
+        __typename: 'Query',
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          name: personData.name,
+        },
+      }),
+      complete: true,
+    });
+    expect(personSimple2Diff).toEqual({
+      result: expect.objectContaining({
+        __typename: 'Query',
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          sha256: personData.sha256,
+        },
+      }),
+      complete: true,
+    });
+
+    void person;
+  });
 });
 
 describe('OptimizedNormalizedCache with possibleTypes', () => {
