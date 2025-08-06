@@ -937,8 +937,8 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     const dirtyMissings: MissingFieldRecord[] = [];
     for (let l = rootFields.length, j = 0; j < l; ++j) {
       const changedFields = rootFields[j]!;
-      const isDeleted = changedFields[0];
-      if (isDeleted) {
+      const isDeletedOrModified = changedFields[0];
+      if (isDeletedOrModified) {
         for (
           let mfs = this.missingFieldsNothing, i = mfs.length - 1;
           i >= 0;
@@ -991,8 +991,8 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     }
     for (let l = idFields.length, j = 0; j < l; ++j) {
       const changedFields = idFields[j]!;
-      const isDeleted = changedFields[0];
-      if (isDeleted) {
+      const isDeletedOrModified = changedFields[0];
+      if (isDeletedOrModified) {
         for (
           let mfs = this.missingFieldsNothing, i = mfs.length - 1;
           i >= 0;

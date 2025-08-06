@@ -46,7 +46,7 @@ export type SliceFirst<T extends any[]> = T extends [
 
 // @internal
 export type ChangedFields = [
-  isDeleted: boolean,
+  isDeletedOrModified: boolean,
   id: string,
   ...Array<
     string | [fieldName: string, effectiveArguments: Record<string, unknown>]

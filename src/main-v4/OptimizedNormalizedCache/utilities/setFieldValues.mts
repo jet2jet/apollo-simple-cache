@@ -218,8 +218,19 @@ function setFieldValuesImpl<T>(
     for (const name in source) {
       const effectiveArguments = getEffectiveArguments(null, context.v);
       const path = joinCurrentPath(name, effectiveArguments);
-      if (process(name, null, typename, undefined, path, effectiveArguments)) {
-        pushChangedFields(changedFields, path);
+      const r = process(
+        name,
+        null,
+        typename,
+        undefined,
+        path,
+        effectiveArguments
+      );
+      if (r != null) {
+        pushChangedFields(
+          changedFields,
+          path && [r === 'c', ...(path.slice(1) as SliceFirst<ChangedFields>)]
+        );
       }
     }
   } else {
@@ -228,17 +239,19 @@ function setFieldValuesImpl<T>(
       const name = selection[0];
       const effectiveArguments = getEffectiveArguments(selection[1], context.v);
       const path = joinCurrentPath(name, effectiveArguments);
-      if (
-        process(
-          name,
-          selection[1],
-          typename,
-          selection[2],
-          path,
-          effectiveArguments
-        )
-      ) {
-        pushChangedFields(changedFields, path);
+      const r = process(
+        name,
+        selection[1],
+        typename,
+        selection[2],
+        path,
+        effectiveArguments
+      );
+      if (r != null) {
+        pushChangedFields(
+          changedFields,
+          path && [r === 'c', ...(path.slice(1) as SliceFirst<ChangedFields>)]
+        );
       }
     });
   }
@@ -253,6 +266,7 @@ function setFieldValuesImpl<T>(
     return [destination as T, true];
   }
 
+  /** Returns 'a' for added, 'c' for changed, and null for not changed */
   function process(
     name: string,
     fieldNode: FieldNode | null,
@@ -260,7 +274,7 @@ function setFieldValuesImpl<T>(
     selectionTypename: string | undefined,
     path: ChangedFields | undefined,
     effectiveArguments: Record<string, unknown> | undefined
-  ): boolean {
+  ): 'a' | 'c' | null {
     let changed = false;
     let actualTypename: string | undefined;
     if (selectionTypename) {
@@ -271,7 +285,7 @@ function setFieldValuesImpl<T>(
       );
       // skip if type is mismatch
       if (!actualTypename) {
-        return false;
+        return null;
       }
     }
     const writeToCacheMap = context.wm;
@@ -308,6 +322,7 @@ function setFieldValuesImpl<T>(
       }
     }
 
+    let r: 'a' | 'c' | null = null;
     if (effectiveArguments) {
       // Store value for specific arguments
       const fieldWithArguments = getFieldWithArguments(destination, name, true);
@@ -338,6 +353,9 @@ function setFieldValuesImpl<T>(
             releaseDataStoreObject(existing as DataStoreObject);
           }
         }
+        if (changed) {
+          r = existing !== undefined ? 'c' : 'a';
+        }
       } else {
         doMerge();
         if (merged !== undefined) {
@@ -353,6 +371,9 @@ function setFieldValuesImpl<T>(
           );
           fieldWithArguments.r.push([effectiveArguments, tuple[0]]);
           changed = true;
+        }
+        if (changed) {
+          r = 'a';
         }
       }
     } else {
@@ -378,11 +399,14 @@ function setFieldValuesImpl<T>(
           releaseDataStoreObject(existing as DataStoreObject);
         }
       }
+      if (changed) {
+        r = existing !== undefined ? 'c' : 'a';
+      }
     }
     if (changed) {
       markProxyDirty(destination, name);
     }
-    return changed;
+    return r;
   }
 
   function joinCurrentPath(
