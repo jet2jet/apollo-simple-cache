@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.2
+
+Fix some bugs, including dirty marking and object reference
+
 ## v0.2.1
 
 Fix for cache modification, in case of field deletion
