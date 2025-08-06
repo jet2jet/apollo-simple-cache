@@ -11,6 +11,8 @@ import type {
   ChangePersonVariablesType,
   MutationType,
   ChangePersonOnlyVariablesType,
+  CityType,
+  PrefectureType,
 } from './types.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -26,6 +28,16 @@ export type PersonSimple2Query = Pick<QueryType, '__typename'> & {
 };
 export type LocationsQuery = Pick<QueryType, '__typename' | 'locations'>;
 export type LocationQuery = Pick<QueryType, '__typename' | 'location'>;
+export type LocationSimpleQuery = Pick<QueryType, '__typename'> & {
+  location:
+    | Pick<PrefectureType, '__typename' | 'id' | 'name'>
+    | Pick<CityType, '__typename' | 'id' | 'name'>;
+};
+export type LocationSimple2Query = Pick<QueryType, '__typename'> & {
+  location:
+    | Pick<PrefectureType, '__typename' | 'id'>
+    | Pick<CityType, '__typename' | 'id' | 'prefecture'>;
+};
 export type LocationNamesQuery = Pick<
   QueryType,
   '__typename' | 'locationNames'
@@ -163,6 +175,34 @@ export const LocationDocument = gql`
     }
   }
 ` as unknown as TypedDocumentNode<LocationQuery, LocationVariablesType>;
+
+export const LocationSimpleDocument = gql`
+  query Location($id: Int!) {
+    location(id: $id) {
+      id
+      ... on Prefecture {
+        name
+      }
+      ... on City {
+        name
+      }
+    }
+  }
+` as unknown as TypedDocumentNode<LocationSimpleQuery, LocationVariablesType>;
+
+export const LocationSimple2Document = gql`
+  query Location($id: Int!) {
+    location(id: $id) {
+      id
+      ... on City {
+        prefecture {
+          id
+          name
+        }
+      }
+    }
+  }
+` as unknown as TypedDocumentNode<LocationSimple2Query, LocationVariablesType>;
 
 export const LocationNamesDocument = gql`
   query LocationNames {

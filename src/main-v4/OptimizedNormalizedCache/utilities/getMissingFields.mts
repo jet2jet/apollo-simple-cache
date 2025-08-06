@@ -25,6 +25,8 @@ export default function getMissingFields(
 ): string[] {
   if (currentData && isReference(currentData)) {
     currentData = rootStore[currentData.__ref] as object | null | undefined;
+    typename =
+      currentData != null ? (currentData as StoreObject).__typename : undefined;
   }
 
   if (!currentData) {

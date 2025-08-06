@@ -16,7 +16,7 @@ import {
   GetUserByIdDocument,
   GetUserPostsDocument,
 } from '@/data/complexQueries.mjs';
-import { locationsData, personsData } from '@/data/dummyData.mjs';
+import { citiesData, locationsData, personsData } from '@/data/dummyData.mjs';
 import {
   LocationNamesDocument,
   LocationsDocument,
@@ -28,6 +28,8 @@ import {
   type PersonQuery,
   type PersonsQuery,
   PersonDocumentWithFragment,
+  LocationSimpleDocument,
+  LocationSimple2Document,
 } from '@/data/simpleQueries.mjs';
 import type { PersonType } from '@/data/types.mjs';
 
@@ -185,6 +187,91 @@ export function registerTests(
       );
     }
   });
+
+  if (cacheType === 'normalized') {
+    test('write and read query with only field differences', () => {
+      const cache = makeCache();
+
+      const locationSimpleDocument = cache.transformDocument(
+        LocationSimpleDocument
+      ) as typeof LocationSimpleDocument;
+      const locationSimple2Document = cache.transformDocument(
+        LocationSimple2Document
+      ) as typeof LocationSimple2Document;
+
+      const locationData = citiesData[0]!;
+      const LOCATION_ID = locationData.id;
+
+      const diff1 = cache.diff({
+        query: locationSimpleDocument,
+        variables: { id: LOCATION_ID },
+        optimistic: false,
+      });
+      expect(diff1.complete).toBeFalsy();
+
+      cache.writeQuery({
+        query: locationSimpleDocument,
+        variables: { id: LOCATION_ID },
+        data: {
+          __typename: 'Query',
+          location: {
+            __typename: locationData.__typename,
+            id: LOCATION_ID,
+            name: locationData.name,
+          },
+        },
+      });
+
+      const diff2 = cache.diff({
+        query: locationSimple2Document,
+        variables: { id: LOCATION_ID },
+        optimistic: false,
+      });
+      expect(diff2.complete).toBeFalsy();
+
+      cache.writeQuery({
+        query: locationSimple2Document,
+        variables: { id: LOCATION_ID },
+        data: {
+          __typename: 'Query',
+          location: {
+            __typename: locationData.__typename,
+            id: LOCATION_ID,
+            prefecture: locationData.prefecture,
+          },
+        },
+      });
+
+      expect(
+        cache.readQuery({
+          query: locationSimpleDocument,
+          variables: { id: LOCATION_ID },
+        })
+      ).toEqual(
+        expect.objectContaining({
+          location: expect.objectContaining({
+            __typename: locationData.__typename,
+            id: LOCATION_ID,
+            name: locationData.name,
+          }),
+        })
+      );
+      expect(
+        cache.readQuery({
+          query: locationSimple2Document,
+          variables: { id: LOCATION_ID },
+        })
+      ).toEqual(
+        expect.objectContaining({
+          location: expect.objectContaining({
+            __typename: locationData.__typename,
+            id: LOCATION_ID,
+            prefecture: locationData.prefecture,
+          }),
+        })
+      );
+    });
+  }
 
   test('watch and write query', () => {
     const fn = jest.fn();
