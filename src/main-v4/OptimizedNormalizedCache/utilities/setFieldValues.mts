@@ -101,12 +101,19 @@ function mergeObjectWithId(
     typeof rootStore[id] !== 'object' ||
     rootStore[id] instanceof Array
   ) {
-    const obj: DataStoreObject =
+    let obj: DataStoreObject =
       existing != null &&
       typeof existing === 'object' &&
       !(existing instanceof Array)
         ? (existing as DataStoreObject)
         : { __proto__: null, [SYMBOL_PROXY_ARRAY]: [] };
+    if (isReference(obj)) {
+      const val = rootStore[obj.__ref];
+      obj =
+        val != null && typeof val === 'object' && !(val instanceof Array)
+          ? (val as DataStoreObject)
+          : { __proto__: null, [SYMBOL_PROXY_ARRAY]: [] };
+    }
     rootStore[id] = obj;
     changed = true;
   }
