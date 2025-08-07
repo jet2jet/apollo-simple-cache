@@ -32,6 +32,8 @@ import {
   LocationSimple2Document,
 } from '@/data/simpleQueries.mjs';
 import type { PersonType } from '@/data/types.mjs';
+import cloneDeep from '@/utilities/cloneDeep.mjs';
+import expectToQueryValue from '@/utilities/expectToQueryValue.mjs';
 
 export function registerTests(
   makeCache: () => ApolloCache<unknown>,
@@ -77,23 +79,17 @@ export function registerTests(
     });
 
     const q1 = cache.readQuery({ query: personsDocument });
-    expect(q1).toEqual(
-      expect.objectContaining({
-        persons: personsData,
-      })
-    );
+    expectToQueryValue(q1, {
+      persons: personsData,
+    });
     const q2 = cache.readQuery({ query: locationsDocument });
-    expect(q2).toEqual(
-      expect.objectContaining({
-        locations: locationsData,
-      })
-    );
+    expectToQueryValue(q2, {
+      locations: locationsData,
+    });
     const q3 = cache.readQuery({ query: locationNamesDocument });
-    expect(q3).toEqual(
-      expect.objectContaining({
-        locationNames,
-      })
-    );
+    expectToQueryValue(q3, {
+      locationNames,
+    });
   });
 
   test('write and extract/restore query', () => {
@@ -142,17 +138,13 @@ export function registerTests(
       cache.restore(serializedObject);
 
       const q1 = cache.readQuery({ query: personsDocument });
-      expect(q1).toEqual(
-        expect.objectContaining({
-          persons: personsData,
-        })
-      );
+      expectToQueryValue(q1, {
+        persons: personsData,
+      });
       const q2 = cache.readQuery({ query: locationsDocument });
-      expect(q2).toEqual(
-        expect.objectContaining({
-          locations: locationsData,
-        })
-      );
+      expectToQueryValue(q2, {
+        locations: locationsData,
+      });
     }
   });
 
@@ -180,11 +172,9 @@ export function registerTests(
         query: personDocument,
         variables: { id: p.id },
       });
-      expect(q).toEqual(
-        expect.objectContaining({
-          person: p,
-        })
-      );
+      expectToQueryValue(q, {
+        person: p,
+      });
     }
   });
 
@@ -242,33 +232,31 @@ export function registerTests(
         },
       });
 
-      expect(
+      expectToQueryValue(
         cache.readQuery({
           query: locationSimpleDocument,
           variables: { id: LOCATION_ID },
-        })
-      ).toEqual(
-        expect.objectContaining({
-          location: expect.objectContaining({
+        }),
+        {
+          location: {
             __typename: locationData.__typename,
             id: LOCATION_ID,
             name: locationData.name,
-          }),
-        })
+          },
+        }
       );
-      expect(
+      expectToQueryValue(
         cache.readQuery({
           query: locationSimple2Document,
           variables: { id: LOCATION_ID },
-        })
-      ).toEqual(
-        expect.objectContaining({
-          location: expect.objectContaining({
+        }),
+        {
+          location: {
             __typename: locationData.__typename,
             id: LOCATION_ID,
             prefecture: locationData.prefecture,
-          }),
-        })
+          },
+        }
       );
     });
   }
@@ -333,11 +321,9 @@ export function registerTests(
     expect(fn).not.toHaveBeenCalled();
     // but data is changed
     const q = cache.readQuery({ query: personsDocument });
-    expect(q).toEqual(
-      expect.objectContaining({
-        persons: newPersonsData,
-      })
-    );
+    expectToQueryValue(q, {
+      persons: newPersonsData,
+    });
   });
 
   test('watch and write query with transaction', () => {
@@ -456,16 +442,16 @@ export function registerTests(
         query: getUserByIdDocument,
         variables: { id: 1 },
       });
-      expect(q1).toEqual(expect.objectContaining(dummyGetUserByIdData));
+      expectToQueryValue(q1, dummyGetUserByIdData);
       const q2 = cache.readQuery({
         query: getUserPostsDocument,
         variables: { id: 1 },
       });
-      expect(q2).toEqual(expect.objectContaining(dummyGetUserPostsData));
+      expectToQueryValue(q2, dummyGetUserPostsData);
       const q3 = cache.readQuery({
         query: getAllUsersDocument,
       });
-      expect(q3).toEqual(expect.objectContaining(dummyGetAllUsersData));
+      expectToQueryValue(q3, dummyGetAllUsersData);
     });
   }
 
@@ -494,15 +480,13 @@ export function registerTests(
         query: personSimpleDocument,
         variables: { id: person.id },
       });
-      expect(q).toEqual(
-        expect.objectContaining({
-          person: {
-            __typename: person.__typename,
-            id: person.id,
-            name: person.name,
-          },
-        })
-      );
+      expectToQueryValue(q, {
+        person: {
+          __typename: person.__typename,
+          id: person.id,
+          name: person.name,
+        },
+      });
     });
   }
 
@@ -737,6 +721,79 @@ export function registerTests(
           returnPartialData: false,
         });
       }).toThrow(MissingFieldError);
+    });
+
+    test('should remain read data after delete field', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        variables: { id: person.id },
+        data: { __typename: 'Query', person },
+      });
+
+      const readData = cache.readQuery({
+        query: personDocument,
+        variables: { id: person.id },
+      });
+      cloneDeep(readData);
+
+      cache.modify({
+        id: cache.identify(person),
+        fields: {
+          name: (_, details) => {
+            return details.DELETE;
+          },
+        },
+      });
+      expectToQueryValue(readData?.person, person);
+    });
+
+    test('should remain read data after delete entire data', () => {
+      const cache = makeCache();
+
+      const personDocument = cache.transformDocument(
+        PersonDocument
+      ) as typeof PersonDocument;
+
+      const person = personsData[0]!;
+
+      cache.writeQuery({
+        query: personDocument,
+        variables: { id: person.id },
+        data: { __typename: 'Query', person },
+      });
+
+      const readData = cache.readQuery({
+        query: personDocument,
+        variables: { id: person.id },
+      });
+      cloneDeep(readData);
+
+      cache.modify({
+        fields: {
+          person: (value: unknown, details) => {
+            if (!value) {
+              return value;
+            }
+            if (
+              details.readField('id', value as Reference | StoreObject) ===
+              person.id
+            ) {
+              return details.DELETE;
+            }
+            return value;
+          },
+        },
+      });
+      cache.gc();
+      expectToQueryValue(readData?.person, person);
     });
 
     test('evict data and receive watch callback', () => {

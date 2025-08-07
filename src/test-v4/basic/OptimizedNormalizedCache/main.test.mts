@@ -11,6 +11,7 @@ import {
   type PersonSimpleQuery,
 } from '@/data/simpleQueries.mjs';
 import OptimizedNormalizedCache from '@/OptimizedNormalizedCache/index.mjs';
+import expectToQueryValue from '@/utilities/expectToQueryValue.mjs';
 
 describe('OptimizedNormalizedCache without possibleTypes', () => {
   registerTests(() => new OptimizedNormalizedCache(), 'normalized');
@@ -95,28 +96,22 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
     // should not be affected by personSimple2
     expect(fnCallbackPersonSimple).not.toHaveBeenCalled();
 
-    expect(personSimpleDiff).toEqual({
-      result: expect.objectContaining({
-        __typename: 'Query',
-        person: {
-          __typename: 'Person',
-          id: PERSON_ID,
-          name: personData.name,
-        },
-      }),
-      complete: true,
+    expectToQueryValue(personSimpleDiff.result, {
+      person: {
+        __typename: 'Person',
+        id: PERSON_ID,
+        name: personData.name,
+      },
     });
-    expect(personSimple2Diff).toEqual({
-      result: expect.objectContaining({
-        __typename: 'Query',
-        person: {
-          __typename: 'Person',
-          id: PERSON_ID,
-          sha256: personData.sha256,
-        },
-      }),
-      complete: true,
+    expect(personSimpleDiff.complete).toBeTrue();
+    expectToQueryValue(personSimple2Diff.result, {
+      person: {
+        __typename: 'Person',
+        id: PERSON_ID,
+        sha256: personData.sha256,
+      },
     });
+    expect(personSimple2Diff.complete).toBeTrue();
 
     void person;
   });
@@ -178,11 +173,9 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
         query: personDocument,
         variables: { id: p.id },
       });
-      expect(q).toEqual(
-        expect.objectContaining({
-          person: p,
-        })
-      );
+      expectToQueryValue(q, {
+        person: p,
+      });
       expect(fn).toHaveBeenCalledWith(p.id);
     }
   });

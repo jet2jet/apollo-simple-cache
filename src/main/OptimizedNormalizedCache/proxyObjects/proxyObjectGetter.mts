@@ -36,7 +36,8 @@ export default function proxyObjectGetter(
   p: string | symbol
 ): unknown {
   // If already cached, return it
-  if (hasOwn(t, p)) {
+  const has = hasOwn(t, p);
+  if (has) {
     const val = t[p];
     // If val is dirty and this object is not dirty, recreates proxy
     if (!isDirtyObject(val) || t[PROXY_SYMBOL_DIRTY]) {
@@ -166,7 +167,8 @@ export default function proxyObjectGetter(
 
   if (proxy === undefined) {
     // Not found
-    return undefined;
+    // If dirty proxy object is available, return it instead
+    return has ? t[p] : undefined;
   }
   t[p] = proxy;
   return proxy;
