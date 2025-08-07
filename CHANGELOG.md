@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.3
+
+Fix a bug for modified proxy object (in case of missing)
+
 ## v0.2.2
 
 Fix some bugs, including dirty marking and object reference
