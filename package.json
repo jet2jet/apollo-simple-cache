@@ -24,21 +24,50 @@
   "type": "module",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
-  "types": "./dist/esm/index.d.mts",
+  "types": "./dist/cjs/index.d.cts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/cjs/index.d.cts"
+      ],
+      "v4": [
+        "./dist/cjs-v4/index.d.cts"
+      ]
+    }
+  },
   "// For Apollo Client 3, we always use CommonJS on Node.js due to importing Apollo Client modules": "",
   "exports": {
     ".": {
-      "node": "./dist/cjs/index.cjs",
-      "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.cjs",
-      "default": "./dist/cjs/index.cjs",
-      "types": "./dist/esm/index.d.mts"
+      "node": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      },
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      },
+      "default": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      }
     },
     "./v4": {
-      "import": "./dist/esm-v4/index.mjs",
-      "require": "./dist/cjs-v4/index.cjs",
-      "default": "./dist/cjs-v4/index.cjs",
-      "types": "./dist/esm-v4/index.d.mts"
+      "import": {
+        "default": "./dist/esm-v4/index.mjs",
+        "types": "./dist/esm-v4/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/cjs-v4/index.cjs",
+        "types": "./dist/cjs-v4/index.d.cts"
+      },
+      "default": {
+        "default": "./dist/cjs-v4/index.cjs",
+        "types": "./dist/cjs-v4/index.d.cts"
+      }
     }
   },
   "scripts": {
@@ -48,12 +77,12 @@
     "build:v3:esm": "babel src/main --extensions \".mts\" --out-file-extension \".mjs\" -d dist/esm",
     "build:v3:esm:dts": "tsc --project src/main/tsconfig.json --emitDeclarationOnly",
     "build:v3:cjs": "babel src/main --config-file ./babel.config.cjs.json --extensions \".mts\" --out-file-extension \".cjs\" -d dist/cjs",
-    "build:v3:cjs:dts": "tsc --project src/main/tsconfig.cjs.json --emitDeclarationOnly",
+    "build:v3:cjs:dts": "tsc --project src/main/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs",
     "build:v4": "npm run build:v4:esm && npm run build:v4:esm:dts && npm run build:v4:cjs && npm run build:v4:cjs:dts",
     "build:v4:esm": "babel src/main-v4 --extensions \".mts\" --out-file-extension \".mjs\" -d dist/esm-v4",
     "build:v4:esm:dts": "tsc --project src/main-v4/tsconfig.json --emitDeclarationOnly",
     "build:v4:cjs": "babel src/main-v4 --config-file ./babel.config.cjs.json --extensions \".mts\" --out-file-extension \".cjs\" -d dist/cjs-v4",
-    "build:v4:cjs:dts": "tsc --project src/main-v4/tsconfig.cjs.json --emitDeclarationOnly",
+    "build:v4:cjs:dts": "tsc --project src/main-v4/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs-v4",
     "benchmark": "tsx --tsconfig src/test/tsconfig.json src/test/benchmark/main.mts",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix",
