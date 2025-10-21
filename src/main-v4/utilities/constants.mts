@@ -1,9 +1,6 @@
-import type {
-  DeleteModifier,
-  InvalidateModifier,
-} from '@apollo/client/cache/core/types/common';
+import type { ModifierDetails } from '@apollo/client/cache';
 
 // @internal
-export const DELETE_MODIFIER = {} as DeleteModifier;
+export const DELETE_MODIFIER = {} as ModifierDetails['DELETE'];
 // @internal
-export const INVALIDATE_MODIFIER = {} as InvalidateModifier;
+export const INVALIDATE_MODIFIER = {} as ModifierDetails['INVALIDATE'];

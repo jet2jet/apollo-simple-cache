@@ -1,17 +1,13 @@
 import {
   isReference,
-  type Modifiers,
+  type Cache,
+  type Modifier,
+  type ModifierDetails,
+  type NormalizedCache,
+  type ReadFieldOptions,
   type Reference,
   type StoreObject,
 } from '@apollo/client/cache';
-import type {
-  AllFieldsModifier,
-  CanReadFunction,
-  Modifier,
-  ModifierDetails,
-  ReadFieldOptions,
-  ToReferenceFunction,
-} from '@apollo/client/cache/core/types/common';
 import {
   DELETE_MODIFIER,
   INVALIDATE_MODIFIER,
@@ -34,6 +30,9 @@ import getFieldValue from './getFieldValue.mjs';
 import getFieldWithArguments from './getFieldWithArguments.mjs';
 import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mjs';
 import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+
+type ToReferenceFunction = NormalizedCache['toReference'];
+type CanReadFunction = NormalizedCache['canRead'];
 
 type ModifierDetailsBase = Pick<
   ModifierDetails,
@@ -576,7 +575,7 @@ function doModify(
 export default function modifyField<Entity extends Record<string, any>>(
   rootStore: Record<string, unknown>,
   data: object,
-  fieldsData: Modifiers<Entity> | AllFieldsModifier<Entity>,
+  fieldsData: Cache.ModifyOptions<Entity>['fields'],
   supertypeMap: SupertypeMap | undefined,
   canRead: CanReadFunction,
   toReference: ToReferenceFunction,

@@ -9,10 +9,7 @@ import {
   type Transaction,
   type Unmasked,
 } from '@apollo/client';
-import type {
-  CanReadFunction,
-  ToReferenceFunction,
-} from '@apollo/client/cache/core/types/common';
+import type { NormalizedCache } from '@apollo/client/cache';
 import {
   addTypenameToDocument,
   isReference,
@@ -70,6 +67,9 @@ import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mjs';
 import modifyField from './utilities/modifyField.mjs';
 import releaseDataStoreObject from './utilities/releaseDataStoreObject.mjs';
 import setFieldValues from './utilities/setFieldValues.mjs';
+
+type ToReferenceFunction = NormalizedCache['toReference'];
+type CanReadFunction = NormalizedCache['canRead'];
 
 type WatcherData = [options: Cache.WatchOptions<object>, revoked: boolean];
 

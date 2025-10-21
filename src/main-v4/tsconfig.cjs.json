@@ -9,9 +9,6 @@
       "@apollo/client/cache": [
         "../../node_modules/@apollo/client-v4/cache/index.d.ts"
       ],
-      "@apollo/client/cache/core/types/common": [
-        "../../node_modules/@apollo/client-v4/cache/core/types/common.d.ts"
-      ],
       "@apollo/client/core": [
         "../../node_modules/@apollo/client-v4/core/index.d.ts"
       ],
