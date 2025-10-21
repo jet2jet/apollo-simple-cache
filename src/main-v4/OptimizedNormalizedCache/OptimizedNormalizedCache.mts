@@ -3,7 +3,6 @@ import {
   DocumentTransform,
   MissingFieldError,
   type Cache,
-  type DataProxy,
   type DocumentNode,
   type OperationVariables,
   type Reference,
@@ -251,9 +250,10 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     this.setProxyCleanTimer = this._setProxyCleanTimer.bind(this);
   }
 
-  public override read<TData = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, TData>
-  ): Unmasked<TData> | null {
+  public override read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     const definition = getMainDefinition(query.query);
     const fragmentMap = getFragmentMap(query.query);
     const variableString = variablesToString(query.variables);
@@ -302,9 +302,10 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     ) as Unmasked<TData> | null;
   }
 
-  public override write<TData = unknown, TVariables = OperationVariables>(
-    write: Cache.WriteOptions<TData, TVariables>
-  ): Reference | undefined {
+  public override write<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(write: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
     const definition = getMainDefinition(write.query);
     const fragmentMap = getFragmentMap(write.query);
     const source = write.result;
@@ -394,7 +395,7 @@ export default class OptimizedNormalizedCache extends ApolloCache {
   public override diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.DiffOptions<TData, TVariables>): DataProxy.DiffResult<TData> {
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
     const definition = getMainDefinition(query.query);
     const fragmentMap = getFragmentMap(query.query);
     const variableString = variablesToString(query.variables);
@@ -498,9 +499,10 @@ export default class OptimizedNormalizedCache extends ApolloCache {
     }
   }
 
-  public override watch<TData = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<TData, TVariables>
-  ): () => void {
+  public override watch<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<TData, TVariables>): () => void {
     const newWatcher: WatcherData = [
       { ...watch } as Cache.WatchOptions<object>,
       false,

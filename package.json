@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.13.8",
-    "@apollo/client-v4": "npm:@apollo/client@^4.0.0-rc.5",
+    "@apollo/client-v4": "npm:@apollo/client@^4.0.0",
     "@babel/cli": "^7.28.0",
     "@babel/core": "^7.28.0",
     "@babel/preset-env": "^7.28.0",
@@ -104,7 +104,7 @@
     "typescript-eslint": "^8.37.0"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.13.8 || ^4.0.0-rc.5 || ^4",
+    "@apollo/client": "^3.13.8 || ^4",
     "graphql": "^15.0.0 || ^16.0.0"
   }
 }

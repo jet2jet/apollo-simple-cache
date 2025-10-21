@@ -3,7 +3,6 @@ import {
   isReference,
   MissingFieldError,
   type Cache,
-  type DataProxy,
   type OperationVariables,
   type Reference,
   type StoreObject,
@@ -89,17 +88,19 @@ export default class SimpleDocumentCache extends ApolloCache {
     this.dirtyKeys = [];
   }
 
-  public override read<TData = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, TData>
-  ): Unmasked<TData> | null {
+  public override read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     const key = this.getCacheKey(query.query, query.variables);
     const data = this.data[key] as Unmasked<TData> | undefined;
     return data !== undefined ? data : null;
   }
 
-  public override write<TData = unknown, TVariables = OperationVariables>(
-    write: Cache.WriteOptions<TData, TVariables>
-  ): Reference | undefined {
+  public override write<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(write: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
     try {
       ++this.txCount;
       const key = this.getCacheKey(write.query, write.variables);
@@ -116,7 +117,7 @@ export default class SimpleDocumentCache extends ApolloCache {
   public override diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.DiffOptions<TData, TVariables>): DataProxy.DiffResult<TData> {
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
     if (query.previousResult && isReference(query.previousResult)) {
       const key = refToCacheKey(query.previousResult);
       const data = this.data[key] as TData | undefined;
@@ -148,9 +149,10 @@ export default class SimpleDocumentCache extends ApolloCache {
     }
   }
 
-  public override watch<TData = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<TData, TVariables>
-  ): () => void {
+  public override watch<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<TData, TVariables>): () => void {
     const watchObject = { ...watch };
     const key = this.getCacheKey(watch.query, watch.variables);
     let rec = this.watchers.get(key);
