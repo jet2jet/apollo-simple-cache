@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.0
+
+Note: This version changes dependency for v4 version of `@apollo/client` to non-alpha version and changes codes around type definitions, but these should not be breaking changes.
+
+- Support Apollo Client v4.0.0
+- Fix `exports` field in package.json
+- Fix type definition files for CommonJS (changed `*.d.mts` to `*.d.cts`)
+
 ## v0.2.3
 
 Fix a bug for modified proxy object (in case of missing)
