@@ -11,8 +11,8 @@ on:
         value: ${{ jobs.export.outputs.npm-version }}
 
 env:
-  NODE_VERSION: 20
-  NPM_VERSION: 10
+  NODE_VERSION: 20.19.3
+  NPM_VERSION: 11.5.1
 
 jobs:
   export:

@@ -3,7 +3,7 @@
   "version": "0.2.3",
   "engines": {
     "node": ">=20",
-    "npm": ">=9"
+    "npm": ">=11.5.1"
   },
   "engineStrict": true,
   "description": "Simple cache features for Apollo Client",
