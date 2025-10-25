@@ -2,8 +2,7 @@
   "name": "apollo-simple-cache",
   "version": "0.3.0",
   "engines": {
-    "node": ">=20",
-    "npm": ">=11.5.1"
+    "node": ">=20"
   },
   "engineStrict": true,
   "description": "Simple cache features for Apollo Client",
