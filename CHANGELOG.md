@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0
+
+- Add `addTypenameToDocument` option to SimpleDocumentCache and set default to true
+- Remove 'npm' from 'engines' field because it is only necessary for CI
+  - This enables to use `npm` version 10.x for dependents
+
 ## v0.3.0
 
 Note: This version changes dependency for v4 version of `@apollo/client` to non-alpha version and changes codes around type definitions, but these should not be breaking changes.
