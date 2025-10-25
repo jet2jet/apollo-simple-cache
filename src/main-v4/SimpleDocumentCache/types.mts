@@ -14,4 +14,9 @@ export interface SimpleDocumentCacheOptions {
     document: DocumentNode,
     variables: TVariables | undefined
   ) => CacheKey;
+  /**
+   * Specify whether `__typename` field will be added to each fields when requesting the query.
+   * **Default is `true`** (`true` is used when `addTypenameToDocument` is nullish)
+   */
+  addTypenameToDocument?: boolean | undefined;
 }

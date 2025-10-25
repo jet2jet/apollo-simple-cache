@@ -1,6 +1,7 @@
 import {
   ApolloCache,
   Cache,
+  DocumentTransform,
   isReference,
   MissingFieldError,
   type DataProxy,
@@ -15,6 +16,7 @@ import type {
   ReadFieldOptions,
   StoreValue,
 } from '@apollo/client/cache';
+import { addTypenameToDocument } from '@apollo/client/utilities';
 import { type DocumentNode } from 'graphql';
 import {
   DELETE_MODIFIER,
@@ -76,12 +78,17 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
   private txCount: number;
   private readonly watchers: Map<CacheKey, Cache.WatchOptions[]>;
   private readonly dirtyKeys: CacheKey[];
+  private readonly addTypenameTransform: DocumentTransform | null;
 
   /** See options for {@link SimpleDocumentCacheOptions} */
   public constructor(options?: SimpleDocumentCacheOptions) {
     super();
 
     this.getCacheKey = options?.getCacheKey ?? defaultGetCacheKey;
+    this.addTypenameTransform =
+      options?.addTypenameToDocument == null || options.addTypenameToDocument
+        ? new DocumentTransform(addTypenameToDocument)
+        : null;
 
     this.data = {};
     this.txCount = 0;
@@ -362,6 +369,12 @@ export default class SimpleDocumentCache extends ApolloCache<CacheObject> {
       }
       return isModified ? newObj : undefined;
     }
+  }
+
+  public override transformDocument(document: DocumentNode): DocumentNode {
+    return this.addTypenameTransform
+      ? this.addTypenameTransform.transformDocument(document)
+      : document;
   }
 
   private broadcastAllWatchers() {

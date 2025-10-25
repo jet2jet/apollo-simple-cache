@@ -9,12 +9,14 @@ import {
   type Transaction,
   type Unmasked,
 } from '@apollo/client';
+import { DocumentTransform } from '@apollo/client';
 import type {
   Modifier,
   ModifierDetails,
   ReadFieldOptions,
   StoreValue,
 } from '@apollo/client/cache';
+import { addTypenameToDocument } from '@apollo/client/utilities';
 import {
   type DocumentNode,
   type FragmentDefinitionNode,
@@ -75,12 +77,17 @@ export default class SimpleDocumentCache extends ApolloCache {
   private txCount: number;
   private readonly watchers: Map<CacheKey, Cache.WatchOptions[]>;
   private readonly dirtyKeys: CacheKey[];
+  private readonly addTypenameTransform: DocumentTransform | null;
 
   /** See options for {@link SimpleDocumentCacheOptions} */
   public constructor(options?: SimpleDocumentCacheOptions) {
     super();
 
     this.getCacheKey = options?.getCacheKey ?? defaultGetCacheKey;
+    this.addTypenameTransform =
+      options?.addTypenameToDocument == null || options.addTypenameToDocument
+        ? new DocumentTransform(addTypenameToDocument)
+        : null;
 
     this.data = {};
     this.txCount = 0;
@@ -366,6 +373,12 @@ export default class SimpleDocumentCache extends ApolloCache {
       }
       return isModified ? newObj : undefined;
     }
+  }
+
+  public override transformDocument(document: DocumentNode): DocumentNode {
+    return this.addTypenameTransform
+      ? this.addTypenameTransform.transformDocument(document)
+      : document;
   }
 
   private broadcastAllWatchers() {
