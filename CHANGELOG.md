@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1
+
+- Fix package.json (remove engineStrict)
+
 ## v0.4.0
 
 - Add `addTypenameToDocument` option to SimpleDocumentCache and set default to true
