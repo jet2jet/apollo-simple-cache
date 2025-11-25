@@ -4,7 +4,6 @@
   "engines": {
     "node": ">=20"
   },
-  "engineStrict": true,
   "description": "Simple cache features for Apollo Client",
   "author": "jet",
   "license": "MIT",
@@ -19,6 +18,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jet2jet/apollo-simple-cache.git"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/jet2jet"
   },
   "type": "module",
   "main": "./dist/cjs/index.cjs",
