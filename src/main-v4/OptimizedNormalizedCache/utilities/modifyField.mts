@@ -18,6 +18,7 @@ import type {
   ChangedFields,
   ChangedFieldsArray,
   ChangedFieldsPathPart,
+  FieldWithArguments,
   SupertypeMap,
 } from '../internalTypes.mjs';
 import recordCurrentObject from '../proxyObjects/recordCurrentObject.mjs';
@@ -457,7 +458,12 @@ function doModify(
       let fieldWithArguments = getFieldWithArguments(object, actualFieldName);
       if (!fieldWithArguments && argsString && !(actualFieldName in object)) {
         (object as Record<string, unknown>)[actualFieldName] =
-          fieldWithArguments = { r: [] };
+          fieldWithArguments = {
+            __proto__: null,
+            r: [],
+          } satisfies FieldWithArguments & {
+            __proto__: null;
+          } as FieldWithArguments;
       }
       if (fieldWithArguments) {
         let args: Record<string, unknown>;

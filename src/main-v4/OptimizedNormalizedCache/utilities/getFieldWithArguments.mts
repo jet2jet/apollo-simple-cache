@@ -26,7 +26,10 @@ export default function getFieldWithArguments(
     | FieldWithArguments
     | undefined;
   if (!data && grow) {
-    (object as Record<string, unknown>)[name] = data = { r: [] };
+    (object as Record<string, unknown>)[name] = data = {
+      __proto__: null,
+      r: [],
+    } satisfies FieldWithArguments & { __proto__: null } as FieldWithArguments;
   }
   return data;
 }

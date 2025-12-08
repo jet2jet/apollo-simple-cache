@@ -66,6 +66,7 @@ export type ProxyCacheRecord = [
 
 // @internal
 export interface ProxyCacheEntry {
+  __proto__: null;
   id: string | undefined;
   /** records */
   r: ProxyCacheRecord[];

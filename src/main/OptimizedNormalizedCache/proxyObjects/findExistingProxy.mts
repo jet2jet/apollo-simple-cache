@@ -72,7 +72,12 @@ export default function findExistingProxy(
     if (noGrow) {
       return undefined;
     }
-    const newEntry: ProxyCacheEntry = { id, r: [], fm: fragmentMap };
+    const newEntry: ProxyCacheEntry = {
+      __proto__: null,
+      id,
+      r: [],
+      fm: fragmentMap,
+    };
     proxyCacheMap.set(currentSelectionSet, newEntry);
     if (index < selectionSets.length - 1) {
       const subMap: ProxyCacheMap = new Map();
