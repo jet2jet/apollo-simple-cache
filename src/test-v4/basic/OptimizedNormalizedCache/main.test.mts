@@ -10,6 +10,7 @@ import {
   possibleTypes,
   type PersonSimpleQuery,
 } from '@/data/simpleQueries.mjs';
+import type { PersonType } from '@/data/types.mjs';
 import OptimizedNormalizedCache from '@/OptimizedNormalizedCache/index.mjs';
 import expectToQueryValue from '@/utilities/expectToQueryValue.mjs';
 
@@ -114,6 +115,68 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
     expect(personSimple2Diff.complete).toBeTrue();
 
     void person;
+  });
+
+  test("will invalidate parent object if the field is marked as 'DELETE'", () => {
+    const cache = new OptimizedNormalizedCache();
+    const personDocument = cache.transformDocument(
+      PersonDocument
+    ) as typeof PersonDocument;
+
+    const personData = personsData[0]! as {
+      [P in keyof PersonType]-?: NonNullable<PersonType[P]>;
+    };
+    const PERSON_ID = personData.id;
+
+    cache.write({
+      query: personDocument,
+      variables: { id: PERSON_ID },
+      result: {
+        __typename: 'Query',
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          name: personData.name,
+          sha256: personData.sha256,
+          tags: personData.tags,
+          address: personData.address,
+        },
+      },
+    });
+
+    // pick data
+    const data = cache.read({
+      query: personDocument,
+      variables: { id: PERSON_ID },
+      optimistic: false,
+    });
+    const storedPerson = data?.person;
+    expect(storedPerson).toEqual(personData);
+
+    // modify
+    const id = cache.identify({ __typename: 'Person', id: PERSON_ID });
+    cache.modify<{ person: typeof personData }>({
+      id,
+      fields: (value, details) => {
+        if (details.fieldName !== 'address') {
+          return value;
+        }
+        return details.DELETE;
+      },
+    });
+
+    // new instance should be returned
+    const r = cache.diff({
+      query: personDocument,
+      variables: { id: PERSON_ID },
+      optimistic: false,
+      returnPartialData: true,
+    });
+    expect(r.complete).toBeFalse();
+    expect(r.result).not.toBe(storedPerson);
+
+    // old instance can still be accessed
+    expect(storedPerson?.address).toEqual(personData.address);
   });
 });
 
