@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.2
+
+No bugfixes, but including small changes
+
 ## v0.4.1
 
 - Fix package.json (remove engineStrict)
