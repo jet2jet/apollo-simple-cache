@@ -26,6 +26,8 @@ export const PROXY_SYMBOL_VARIABLES = Symbol('snc:proxyVariables');
 // @internal
 export const PROXY_SYMBOL_VARIABLES_STRING = Symbol('snc:proxyVariablesString');
 // @internal
+export const PROXY_SYMBOL_RECORDED = Symbol('snc:recorded');
+// @internal
 export const PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS = Symbol(
   'snc:proxyGetEffectiveArguments'
 );
@@ -51,6 +53,7 @@ export type ProxyObject = Record<string | symbol, unknown> & {
   [PROXY_SYMBOL_BASE_CACHE]: BaseCache;
   [PROXY_SYMBOL_VARIABLES]: Record<string, unknown> | undefined;
   [PROXY_SYMBOL_VARIABLES_STRING]: string;
+  [PROXY_SYMBOL_RECORDED]: boolean;
   readonly [PROXY_SYMBOL_GET_EFFECTIVE_ARGUMENTS]: (
     fieldName: string
   ) => Record<string, unknown> | undefined;

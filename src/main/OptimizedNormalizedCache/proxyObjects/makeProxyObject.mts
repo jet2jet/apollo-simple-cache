@@ -22,6 +22,7 @@ import {
   PROXY_SYMBOL_OWN_KEYS,
   PROXY_SYMBOL_VARIABLES,
   PROXY_SYMBOL_VARIABLES_STRING,
+  PROXY_SYMBOL_RECORDED,
   type BaseCache,
   type ProxyObject,
 } from './types.mjs';
@@ -148,6 +149,7 @@ export function makeProxyObjectImpl(
   t[PROXY_SYMBOL_BASE_CACHE] = cache;
   t[PROXY_SYMBOL_VARIABLES] = variables as Record<string, unknown> | undefined;
   t[PROXY_SYMBOL_VARIABLES_STRING] = variablesString;
+  t[PROXY_SYMBOL_RECORDED] = false;
 
   const proxy = new Proxy<ProxyObject>(t, proxyHandler);
 
