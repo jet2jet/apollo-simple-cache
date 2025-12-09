@@ -43,6 +43,16 @@ const ProfileType = new GraphQLObjectType({
   },
 });
 
+// self-follow is allowed for circular data test
+const FollowType = new GraphQLObjectType({
+  name: 'Follow',
+  fields: () => ({
+    date: { type: new GraphQLNonNull(GraphQLString) },
+    memo: { type: GraphQLString },
+    user: { type: new GraphQLNonNull(UserType) },
+  }),
+});
+
 CommentType = new GraphQLObjectType({
   name: 'Comment',
   fields: () => ({
@@ -86,6 +96,9 @@ UserType = new GraphQLObjectType({
     role: { type: new GraphQLNonNull(GraphQLString) },
     status: { type: new GraphQLNonNull(GraphQLString) },
     profile: { type: new GraphQLNonNull(ProfileType) },
+    follows: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(FollowType))),
+    },
     posts: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(PostType))),
     },

@@ -79,17 +79,29 @@ export function registerTests(
     });
 
     const q1 = cache.readQuery({ query: personsDocument });
-    expectToQueryValue(q1, {
-      persons: personsData,
-    });
+    expectToQueryValue(
+      q1,
+      {
+        persons: personsData,
+      },
+      personsDocument
+    );
     const q2 = cache.readQuery({ query: locationsDocument });
-    expectToQueryValue(q2, {
-      locations: locationsData,
-    });
+    expectToQueryValue(
+      q2,
+      {
+        locations: locationsData,
+      },
+      locationsDocument
+    );
     const q3 = cache.readQuery({ query: locationNamesDocument });
-    expectToQueryValue(q3, {
-      locationNames,
-    });
+    expectToQueryValue(
+      q3,
+      {
+        locationNames,
+      },
+      locationNamesDocument
+    );
   });
 
   test('write and extract/restore query', () => {
@@ -138,13 +150,21 @@ export function registerTests(
       cache.restore(serializedObject);
 
       const q1 = cache.readQuery({ query: personsDocument });
-      expectToQueryValue(q1, {
-        persons: personsData,
-      });
+      expectToQueryValue(
+        q1,
+        {
+          persons: personsData,
+        },
+        personsDocument
+      );
       const q2 = cache.readQuery({ query: locationsDocument });
-      expectToQueryValue(q2, {
-        locations: locationsData,
-      });
+      expectToQueryValue(
+        q2,
+        {
+          locations: locationsData,
+        },
+        locationsDocument
+      );
     }
   });
 
@@ -172,9 +192,13 @@ export function registerTests(
         query: personDocument,
         variables: { id: p.id },
       });
-      expectToQueryValue(q, {
-        person: p,
-      });
+      expectToQueryValue(
+        q,
+        {
+          person: p,
+        },
+        personDocument
+      );
     }
   });
 
@@ -243,7 +267,8 @@ export function registerTests(
             id: LOCATION_ID,
             name: locationData.name,
           },
-        }
+        },
+        locationSimpleDocument
       );
       expectToQueryValue(
         cache.readQuery({
@@ -256,7 +281,8 @@ export function registerTests(
             id: LOCATION_ID,
             prefecture: locationData.prefecture,
           },
-        }
+        },
+        locationSimple2Document
       );
     });
   }
@@ -321,9 +347,13 @@ export function registerTests(
     expect(fn).not.toHaveBeenCalled();
     // but data is changed
     const q = cache.readQuery({ query: personsDocument });
-    expectToQueryValue(q, {
-      persons: newPersonsData,
-    });
+    expectToQueryValue(
+      q,
+      {
+        persons: newPersonsData,
+      },
+      personsDocument
+    );
   });
 
   test('watch and write query with transaction', () => {
@@ -406,13 +436,10 @@ export function registerTests(
   });
 
   if (cacheType !== 'no-normalized') {
-    test('write and read complex query including circular reference', () => {
+    test('write and read complex query including circular reference [1]', () => {
       const cache = makeCache();
 
       const getUserByIdDocument = cache.transformDocument(GetUserByIdDocument);
-      const getUserPostsDocument =
-        cache.transformDocument(GetUserPostsDocument);
-      const getAllUsersDocument = cache.transformDocument(GetAllUsersDocument);
 
       cache.writeQuery({
         query: getUserByIdDocument,
@@ -422,6 +449,19 @@ export function registerTests(
         },
         variables: { id: 1 },
       });
+
+      const q1 = cache.readQuery({
+        query: getUserByIdDocument,
+        variables: { id: 1 },
+      });
+      expectToQueryValue(q1, dummyGetUserByIdData, getUserByIdDocument);
+    });
+    test('write and read complex query including circular reference [2]', () => {
+      const cache = makeCache();
+
+      const getUserPostsDocument =
+        cache.transformDocument(GetUserPostsDocument);
+
       cache.writeQuery({
         query: getUserPostsDocument,
         data: {
@@ -430,6 +470,18 @@ export function registerTests(
         },
         variables: { id: 1 },
       });
+
+      const q2 = cache.readQuery({
+        query: getUserPostsDocument,
+        variables: { id: 1 },
+      });
+      expectToQueryValue(q2, dummyGetUserPostsData, getUserPostsDocument);
+    });
+    test('write and read complex query including circular reference [3]', () => {
+      const cache = makeCache();
+
+      const getAllUsersDocument = cache.transformDocument(GetAllUsersDocument);
+
       cache.writeQuery({
         query: getAllUsersDocument,
         data: {
@@ -438,20 +490,10 @@ export function registerTests(
         },
       });
 
-      const q1 = cache.readQuery({
-        query: getUserByIdDocument,
-        variables: { id: 1 },
-      });
-      expectToQueryValue(q1, dummyGetUserByIdData);
-      const q2 = cache.readQuery({
-        query: getUserPostsDocument,
-        variables: { id: 1 },
-      });
-      expectToQueryValue(q2, dummyGetUserPostsData);
       const q3 = cache.readQuery({
         query: getAllUsersDocument,
       });
-      expectToQueryValue(q3, dummyGetAllUsersData);
+      expectToQueryValue(q3, dummyGetAllUsersData, getAllUsersDocument);
     });
   }
 
@@ -480,13 +522,17 @@ export function registerTests(
         query: personSimpleDocument,
         variables: { id: person.id },
       });
-      expectToQueryValue(q, {
-        person: {
-          __typename: person.__typename,
-          id: person.id,
-          name: person.name,
+      expectToQueryValue(
+        q,
+        {
+          person: {
+            __typename: person.__typename,
+            id: person.id,
+            name: person.name,
+          },
         },
-      });
+        personSimpleDocument
+      );
     });
   }
 
@@ -769,7 +815,11 @@ export function registerTests(
           },
         },
       });
-      expectToQueryValue(readData?.person, person);
+      expectToQueryValue(
+        readData,
+        { __typename: 'Query', person },
+        personDocument
+      );
     });
 
     test('should remain read data after delete entire data', () => {
@@ -810,7 +860,11 @@ export function registerTests(
         },
       });
       cache.gc();
-      expectToQueryValue(readData?.person, person);
+      expectToQueryValue(
+        readData,
+        { __typename: 'Query', person },
+        personDocument
+      );
     });
 
     test('evict data and receive watch callback', () => {

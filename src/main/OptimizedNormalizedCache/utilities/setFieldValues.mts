@@ -1,6 +1,7 @@
 import { type Reference, type StoreObject } from '@apollo/client';
 import type { FieldNode, SelectionSetNode } from 'graphql';
 import equal from '../../utilities/equal.mjs';
+import hasOwn from '../../utilities/hasOwn.mjs';
 import {
   SYMBOL_PROXY_ARRAY,
   type ChangedFields,
@@ -328,6 +329,53 @@ function setFieldValuesImpl<T>(
         }
       }
     }
+    function writeToDestination(
+      destination: Record<string | symbol, unknown>,
+      name: string | symbol,
+      value: unknown
+    ): void;
+    function writeToDestination(
+      destination: Record<number, unknown>,
+      name: number,
+      value: unknown
+    ): void;
+    function writeToDestination(
+      destination: Record<string | number | symbol, unknown>,
+      name: string | number | symbol,
+      value: unknown
+    ): void {
+      // existing is the previous value
+      if (hasOwn(destination, name) && destination[name] !== existing) {
+        const o = destination[name];
+        if (
+          typeof o === 'object' &&
+          o != null &&
+          typeof value === 'object' &&
+          value != null
+        ) {
+          const isDestinationArray = o instanceof Array;
+          const isValueArray = value instanceof Array;
+          if (isDestinationArray && isValueArray && o.length === value.length) {
+            for (let l = value.length, i = 0; i < l; ++i) {
+              writeToDestination(o, i, value[i]);
+            }
+            return;
+          } else if (!isDestinationArray && !isValueArray) {
+            (Object.getOwnPropertyNames(value) as Array<string | symbol>)
+              .concat(Object.getOwnPropertySymbols(value))
+              .forEach((key) => {
+                writeToDestination(
+                  o as Record<string | number | symbol, unknown>,
+                  key,
+                  (value as Record<string | number | symbol, unknown>)[key]
+                );
+              });
+            return;
+          }
+        }
+      }
+      destination[name] = value;
+    }
 
     let r: 'a' | 'c' | null = null;
     if (effectiveArguments) {
@@ -344,14 +392,15 @@ function setFieldValuesImpl<T>(
           changed = !isReference(existing) || existing.__ref !== merged.__ref;
           record[1] = merged;
         } else {
-          let changed2: boolean;
-          [record[1], changed2] = setFieldValuesImpl(
+          const [newValue, changed2] = setFieldValuesImpl(
             existing,
             val,
             subSelectionSet,
             path,
             context
           );
+          // record[1] may be written in recursive setFieldValuesImpl call
+          writeToDestination(record, 1, newValue);
           changed ||= changed2;
         }
         if (!isEqualObjectRef(existing, record[1])) {
@@ -390,14 +439,15 @@ function setFieldValuesImpl<T>(
       if (merged !== undefined) {
         destination[name] = merged;
       } else {
-        let changed2: boolean;
-        [destination[name], changed2] = setFieldValuesImpl(
+        const [newValue, changed2] = setFieldValuesImpl(
           existing as DataStoreObject | undefined,
           val,
           subSelectionSet,
           path,
           context
         );
+        // destination[name] may be written in recursive setFieldValuesImpl call
+        writeToDestination(destination, name, newValue);
         changed ||= changed2;
       }
       if (!isEqualObjectRef(destination[name], existing)) {

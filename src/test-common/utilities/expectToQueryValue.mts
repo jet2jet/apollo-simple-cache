@@ -1,33 +1,72 @@
-function adjustExpectedObject(actual: unknown, expected: unknown): unknown {
+import type { DocumentNode } from 'graphql';
+import type {
+  FragmentMap,
+  SelectionTuple,
+} from '@/OptimizedNormalizedCache/internalTypes.mjs';
+import getCachedSelections from '@/OptimizedNormalizedCache/utilities/getCachedSelections.mjs';
+import getMainDefinition from '@/utilities/getMainDefinition.mjs';
+
+function adjustExpectedObject(
+  actual: unknown,
+  expected: unknown,
+  selections: readonly SelectionTuple[],
+  fragmentMap: FragmentMap
+): unknown {
   if (typeof expected !== 'object' || !expected) {
     return expected;
   }
-  if (typeof actual !== 'object' || !actual) {
-    return expected;
-  }
   if (expected instanceof Array) {
-    if (!(actual instanceof Array)) {
-      return expected;
+    if (!(actual instanceof Array) || actual.length !== expected.length) {
+      return expected.map((x) =>
+        adjustExpectedObject(undefined, x, selections, fragmentMap)
+      );
+    } else {
+      return expected.map((x, i) =>
+        adjustExpectedObject(actual[i], x, selections, fragmentMap)
+      );
     }
-    return expected.map((x, i) => adjustExpectedObject(actual[i], x));
   }
   const obj: Record<string, unknown> = { __proto__: null };
-  if ('__dirty' in actual) {
-    obj.__dirty = (actual as Record<string, unknown>).__dirty;
-  }
-  if ('__typename' in actual) {
-    obj.__typename = (actual as Record<string, unknown>).__typename;
-  }
-  for (const key in expected) {
-    if (key === '__typename') {
-      if (!('__typename' in actual)) {
-        continue;
+  const thisTypename =
+    (expected as Record<string, string>).__typename ||
+    (typeof actual === 'object' && actual
+      ? (actual as Record<string, string>).__typename
+      : undefined);
+  for (const sel of selections) {
+    const key = sel[0];
+    if (thisTypename != null && sel[2] && sel[2] !== thisTypename) {
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(expected, key)) {
+      if (
+        typeof actual === 'object' &&
+        actual != null &&
+        Object.prototype.hasOwnProperty.call(actual, key)
+      ) {
+        obj[key] = (actual as Record<string, unknown>)[key];
+      }
+    } else {
+      const actualValue =
+        typeof actual === 'object' && actual != null
+          ? (actual as Record<string, unknown>)[key]
+          : undefined;
+      if (sel[1].selectionSet) {
+        obj[key] = adjustExpectedObject(
+          actualValue,
+          (expected as Record<string, unknown>)[key],
+          getCachedSelections(sel[1].selectionSet, fragmentMap),
+          fragmentMap
+        );
+      } else {
+        obj[key] = (expected as Record<string, unknown>)[key];
       }
     }
-    obj[key] = adjustExpectedObject(
-      (actual as Record<string, unknown>)[key],
-      (expected as Record<string, unknown>)[key]
-    );
+  }
+  if (typeof actual === 'object' && actual && '__typename' in actual) {
+    obj.__typename = (actual as Record<string, unknown>).__typename;
+  }
+  if (typeof actual === 'object' && actual && '__dirty' in actual) {
+    obj.__dirty = (actual as Record<string, unknown>).__dirty;
   }
   return obj;
 }
@@ -53,7 +92,17 @@ type AcceptableQueryValue<T> =
  */
 export default function expectToQueryValue<T>(
   actual: AcceptableQueryValue<T> | null | undefined,
-  expected: AcceptableQueryValue<T> | null | undefined
+  expected: AcceptableQueryValue<T> | null | undefined,
+  document: DocumentNode,
+  fragmentMap: FragmentMap = {}
 ): void {
-  expect(actual).toEqual(adjustExpectedObject(actual, expected));
+  const mainDefinition = getMainDefinition(document);
+  expect(actual).toEqual(
+    adjustExpectedObject(
+      actual,
+      expected,
+      getCachedSelections(mainDefinition.selectionSet, fragmentMap),
+      fragmentMap
+    )
+  );
 }

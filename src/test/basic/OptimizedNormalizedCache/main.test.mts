@@ -97,21 +97,29 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
     // should not be affected by personSimple2
     expect(fnCallbackPersonSimple).not.toHaveBeenCalled();
 
-    expectToQueryValue(personSimpleDiff.result, {
-      person: {
-        __typename: 'Person',
-        id: PERSON_ID,
-        name: personData.name,
+    expectToQueryValue(
+      personSimpleDiff.result,
+      {
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          name: personData.name,
+        },
       },
-    });
+      personSimpleDocument
+    );
     expect(personSimpleDiff.complete).toBeTrue();
-    expectToQueryValue(personSimple2Diff.result, {
-      person: {
-        __typename: 'Person',
-        id: PERSON_ID,
-        sha256: personData.sha256,
+    expectToQueryValue(
+      personSimple2Diff.result,
+      {
+        person: {
+          __typename: 'Person',
+          id: PERSON_ID,
+          sha256: personData.sha256,
+        },
       },
-    });
+      personSimple2Document
+    );
     expect(personSimple2Diff.complete).toBeTrue();
 
     void person;
@@ -236,9 +244,13 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
         query: personDocument,
         variables: { id: p.id },
       });
-      expectToQueryValue(q, {
-        person: p,
-      });
+      expectToQueryValue(
+        q,
+        {
+          person: p,
+        },
+        personDocument
+      );
       expect(fn).toHaveBeenCalledWith(p.id);
     }
   });

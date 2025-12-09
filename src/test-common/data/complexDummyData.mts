@@ -35,6 +35,7 @@ for (let i = 0; i < 10; i++) {
         coordinates: `35.68${i},139.69${i}`,
       },
     },
+    follows: [],
     posts: [],
     comments: [],
   };
@@ -57,6 +58,16 @@ for (let i = 0; i < 20; i++) {
   dummyUsers[i % dummyUsers.length].posts.push(post);
 }
 
+const firstUser = dummyUsers[0]!;
+
+(() => {
+  const u1 = firstUser;
+  const u2 = dummyUsers[1]!;
+  u1.follows.push({ date: '2025-06-10T09:00:00Z', memo: 'user 2', user: u2 });
+  u1.follows.push({ date: '2025-06-11T09:00:00Z', memo: 'user 1', user: u1 });
+  u2.follows.push({ date: '2025-06-12T09:00:00Z', memo: 'user 1', user: u1 });
+})();
+
 for (let i = 0; i < 30; i++) {
   const comment = {
     id: 5000 + i,
@@ -76,10 +87,23 @@ for (let i = 0; i < 30; i++) {
 export const dummyGetUserByIdData = {
   user: {
     id: 1,
-    username: 'user1',
-    fullName: 'User 1',
-    email: 'user1@example.com',
-    posts: dummyUsers[0].posts.map((p: any) => ({
+    username: firstUser.username,
+    fullName: firstUser.fullName,
+    email: firstUser.email,
+    follows: firstUser.follows.map((f: any) => ({
+      memo: f.memo,
+      user: {
+        id: f.user.id,
+        username: f.user.username,
+        follows: f.user.follows.map((f2: any) => ({
+          date: f2.date,
+          __typename: 'Follows',
+        })),
+        __typename: 'User',
+      },
+      __typename: 'Follows',
+    })),
+    posts: firstUser.posts.map((p: any) => ({
       id: p.id,
       title: p.title,
       __typename: 'Post',
@@ -90,9 +114,9 @@ export const dummyGetUserByIdData = {
 
 export const dummyGetUserPostsData = {
   user: {
-    id: 1,
-    username: 'user1',
-    posts: dummyUsers[0].posts.map((post: any) => ({
+    id: firstUser.id,
+    username: firstUser.username,
+    posts: firstUser.posts.map((post: any) => ({
       id: post.id,
       title: post.title,
       summary: post.summary,
@@ -102,13 +126,21 @@ export const dummyGetUserPostsData = {
         likes: c.likes,
         author: {
           id: c.author.id,
-          username: c.author.username,
+          fullName: c.author.fullName,
+          profile: {
+            age: c.author.profile.age,
+            __typename: 'Profile',
+          },
           __typename: 'User',
         },
         __typename: 'Comment',
       })),
       __typename: 'Post',
     })),
+    profile: {
+      gender: firstUser.profile.gender,
+      __typename: 'Profile',
+    },
     __typename: 'User',
   },
 };

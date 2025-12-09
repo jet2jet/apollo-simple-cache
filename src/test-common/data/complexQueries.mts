@@ -7,6 +7,16 @@ export const GetUserByIdDocument = gql`
       username
       fullName
       email
+      follows {
+        memo
+        user {
+          id
+          username
+          follows {
+            date
+          }
+        }
+      }
       posts {
         id
         title
@@ -30,9 +40,16 @@ export const GetUserPostsDocument = gql`
           likes
           author {
             id
-            username
+            fullName
+            profile {
+              age
+            }
           }
         }
+      }
+      # should be merged with posts[].comments[].author.profile
+      profile {
+        gender
       }
     }
   }
