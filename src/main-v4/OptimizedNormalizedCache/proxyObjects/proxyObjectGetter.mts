@@ -179,10 +179,15 @@ export default function proxyObjectGetter(
   ) {
     if (incoming && incoming instanceof Array) {
       // Avoid wrapping array with proxy; apply for each elements
-      return incoming.map((v: unknown): unknown =>
-        v != null && typeof v === 'object'
-          ? callMakeProxy(v, subSelectionSet)
-          : v
+      return (
+        incoming
+          .map((v: unknown): unknown =>
+            v != null && typeof v === 'object'
+              ? callMakeProxy(v, subSelectionSet)
+              : v
+          )
+          // Filter undefined (normal field's 'undefined' is similar to 'missing', but array element's 'undefined' is usually treat as non-missing)
+          .filter((v) => v !== undefined)
       );
     }
     if (incoming && isReference(incoming)) {
