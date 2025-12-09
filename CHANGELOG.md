@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3
+
+- Fix to record (save) proxy object recursively
+- Fix to filter 'undefined' elements
+- Fix data writing for circular reference (merge instead overwrite)
+
 ## v0.4.2
 
 No bugfixes, but including small changes
