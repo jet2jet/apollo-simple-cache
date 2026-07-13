@@ -105,8 +105,8 @@
     "@wry/equality": "^0.5.7"
   },
   "devDependencies": {
-    "@apollo/client": "^3.13.8",
-    "@apollo/client-v4": "npm:@apollo/client@^4.0.0",
+    "@apollo/client": "^3.13.9",
+    "@apollo/client-v4": "npm:@apollo/client@^4.2.6",
     "@babel/cli": "^7.28.0",
     "@babel/core": "^7.28.0",
     "@babel/preset-env": "^7.28.0",
