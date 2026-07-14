@@ -32,6 +32,9 @@
       "*": [
         "./dist/cjs/index.d.cts"
       ],
+      "v3": [
+        "./dist/cjs/index.d.cts"
+      ],
       "v4": [
         "./dist/cjs-v4/index.d.cts"
       ]
@@ -40,6 +43,24 @@
   "// For Apollo Client 3, we always use CommonJS on Node.js due to importing Apollo Client modules": "",
   "exports": {
     ".": {
+      "node": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      },
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      },
+      "default": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.cts"
+      }
+    },
+    "./v3": {
       "node": {
         "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.cts"
@@ -141,6 +162,6 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.13.8 || ^4",
-    "graphql": "^15.0.0 || ^16.0.0"
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
 }
