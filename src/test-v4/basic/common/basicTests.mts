@@ -1,28 +1,32 @@
+import assert from 'node:assert';
+import { mock, test } from 'node:test';
 import {
   MissingFieldError,
   type ApolloCache,
   type Cache,
   type Reference,
   type StoreObject,
-} from '@apollo/client';
-import { jest } from '@jest/globals';
+} from '@apollo/client-v4';
 import {
   dummyGetAllUsersData,
   dummyGetUserByIdData,
   dummyGetUserPostsData,
-} from '@/data/complexDummyData.mjs';
+} from '#test-common/data/complexDummyData.mts';
 import {
   GetAllUsersDocument,
   GetUserByIdDocument,
   GetUserPostsDocument,
-} from '@/data/complexQueries.mjs';
-import { citiesData, locationsData, personsData } from '@/data/dummyData.mjs';
+} from '#test-common/data/complexQueries.mts';
+import {
+  citiesData,
+  locationsData,
+  personsData,
+} from '#test-common/data/dummyData.mts';
 import {
   LocationNamesDocument,
   LocationsDocument,
   PersonChunkFragment,
   PersonDocument,
-  type PersonFragment,
   PersonsDocument,
   PersonSimpleDocument,
   type PersonQuery,
@@ -30,16 +34,20 @@ import {
   PersonDocumentWithFragment,
   LocationSimpleDocument,
   LocationSimple2Document,
-} from '@/data/simpleQueries.mjs';
-import type { PersonType } from '@/data/types.mjs';
-import cloneDeep from '@/utilities/cloneDeep.mjs';
-import expectToQueryValue from '@/utilities/expectToQueryValue.mjs';
+} from '#test-common/data/simpleQueries.mts';
+import type { PersonType } from '#test-common/data/types.mts';
+import {
+  assertPartialEqual,
+  isPartialDeepStrictEqualWithUnwrapProxy,
+} from '#test-common/utilities/asserts.mts';
+import cloneDeep from '#test-common/utilities/cloneDeep.mts';
+import expectToQueryValue from '#test-common/utilities/expectToQueryValue.mts';
 
 export function registerTests(
   makeCache: () => ApolloCache,
   cacheType: 'normalized' | 'document' | 'no-normalized'
 ): void {
-  test('write and read query', () => {
+  void test('write and read query', () => {
     const cache = makeCache();
 
     const personsDocument = cache.transformDocument(
@@ -104,7 +112,7 @@ export function registerTests(
     );
   });
 
-  test('write and extract/restore query', () => {
+  void test('write and extract/restore query', () => {
     let serializedObject: unknown;
     {
       const cache = makeCache();
@@ -134,7 +142,7 @@ export function registerTests(
       serializedObject = cache.extract();
 
       // Extracted data must be stringify-able
-      expect(() => JSON.stringify(serializedObject)).not.toThrow();
+      assert.doesNotThrow(() => JSON.stringify(serializedObject));
     }
     serializedObject = JSON.parse(JSON.stringify(serializedObject));
     {
@@ -168,7 +176,7 @@ export function registerTests(
     }
   });
 
-  test('write and read query with only variable differences', () => {
+  void test('write and read query with only variable differences', () => {
     const cache = makeCache();
 
     const personDocument = cache.transformDocument(
@@ -203,7 +211,7 @@ export function registerTests(
   });
 
   if (cacheType === 'normalized') {
-    test('write and read query with only field differences', () => {
+    void test('write and read query with only field differences', () => {
       const cache = makeCache();
 
       const locationSimpleDocument = cache.transformDocument(
@@ -221,7 +229,7 @@ export function registerTests(
         variables: { id: LOCATION_ID },
         optimistic: false,
       });
-      expect(diff1.complete).toBeFalsy();
+      assert.ok(!diff1.complete);
 
       cache.writeQuery({
         query: locationSimpleDocument,
@@ -241,7 +249,7 @@ export function registerTests(
         variables: { id: LOCATION_ID },
         optimistic: false,
       });
-      expect(diff2.complete).toBeFalsy();
+      assert.ok(!diff2.complete);
 
       cache.writeQuery({
         query: locationSimple2Document,
@@ -287,8 +295,8 @@ export function registerTests(
     });
   }
 
-  test('watch and write query', () => {
-    const fn = jest.fn();
+  void test('watch and write query', () => {
+    const fn = mock.fn<Cache.WatchCallback<PersonsQuery>>();
     const cache = makeCache();
 
     const personsDocument = cache.transformDocument(
@@ -305,19 +313,21 @@ export function registerTests(
       },
     });
 
-    expect(fn).toHaveBeenCalledWith<
-      Parameters<Cache.WatchCallback<PersonsQuery>>
-    >(
-      {
-        complete: true,
-        result: expect.objectContaining({
-          persons: personsData,
-        }),
-      },
-      undefined
+    assert.ok(
+      fn.mock.calls.some((call) =>
+        isPartialDeepStrictEqualWithUnwrapProxy(call.arguments, [
+          {
+            complete: true,
+            result: {
+              persons: personsData,
+            },
+          },
+          undefined,
+        ])
+      )
     );
 
-    fn.mockClear();
+    fn.mock.resetCalls();
 
     // If same data is written, watcher callback will not be called
     cache.writeQuery({
@@ -327,9 +337,9 @@ export function registerTests(
         persons: personsData,
       },
     });
-    expect(fn).not.toHaveBeenCalled();
+    assert.equal(fn.mock.callCount(), 0);
 
-    fn.mockClear();
+    fn.mock.resetCalls();
 
     // If broadcast = false, watcher callback will not be called
     const newPersonsData = personsData.map((p) => ({
@@ -344,7 +354,7 @@ export function registerTests(
       },
       broadcast: false,
     });
-    expect(fn).not.toHaveBeenCalled();
+    assert.equal(fn.mock.callCount(), 0);
     // but data is changed
     const q = cache.readQuery({ query: personsDocument });
     expectToQueryValue(
@@ -356,8 +366,8 @@ export function registerTests(
     );
   });
 
-  test('watch and write query with transaction', () => {
-    const fn = jest.fn();
+  void test('watch and write query with transaction', () => {
+    const fn = mock.fn();
     const cache = makeCache();
 
     const personsDocument = cache.transformDocument(
@@ -376,23 +386,25 @@ export function registerTests(
       });
 
       // During transaction, watcher would not be called
-      expect(fn).not.toHaveBeenCalled();
+      assert.equal(fn.mock.callCount(), 0);
     });
 
-    expect(fn).toHaveBeenCalledWith<
-      Parameters<Cache.WatchCallback<PersonsQuery>>
-    >(
-      {
-        complete: true,
-        result: expect.objectContaining({
-          persons: personsData,
-        }),
-      },
-      undefined
+    assert.ok(
+      fn.mock.calls.some((call) =>
+        isPartialDeepStrictEqualWithUnwrapProxy(call.arguments, [
+          {
+            complete: true,
+            result: {
+              persons: personsData,
+            },
+          },
+          undefined,
+        ])
+      )
     );
   });
 
-  test('will not affect list and individual query', async () => {
+  void test('will not affect list and individual query', async () => {
     const cache = makeCache();
 
     const personsDocument = cache.transformDocument(
@@ -415,7 +427,7 @@ export function registerTests(
         query: personDocument,
         variables: { id: p.id },
       });
-      expect(q).toBeNull();
+      assert.equal(q, null);
     }
 
     await cache.reset();
@@ -432,11 +444,11 @@ export function registerTests(
     }
 
     const q = cache.readQuery({ query: personsDocument });
-    expect(q).toBeNull();
+    assert.equal(q, null);
   });
 
   if (cacheType !== 'no-normalized') {
-    test('write and read complex query including circular reference [1]', () => {
+    void test('write and read complex query including circular reference [1]', () => {
       const cache = makeCache();
 
       const getUserByIdDocument = cache.transformDocument(GetUserByIdDocument);
@@ -456,7 +468,7 @@ export function registerTests(
       });
       expectToQueryValue(q1, dummyGetUserByIdData, getUserByIdDocument);
     });
-    test('write and read complex query including circular reference [2]', () => {
+    void test('write and read complex query including circular reference [2]', () => {
       const cache = makeCache();
 
       const getUserPostsDocument =
@@ -477,7 +489,7 @@ export function registerTests(
       });
       expectToQueryValue(q2, dummyGetUserPostsData, getUserPostsDocument);
     });
-    test('write and read complex query including circular reference [3]', () => {
+    void test('write and read complex query including circular reference [3]', () => {
       const cache = makeCache();
 
       const getAllUsersDocument = cache.transformDocument(GetAllUsersDocument);
@@ -498,7 +510,7 @@ export function registerTests(
   }
 
   if (cacheType === 'normalized') {
-    test('will return complete data if data with larger query is stored', () => {
+    void test('will return complete data if data with larger query is stored', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -536,7 +548,7 @@ export function registerTests(
     });
   }
 
-  test('modify data and receive watch callback', () => {
+  void test('modify data and receive watch callback', () => {
     const cache = makeCache();
 
     const personDocument = cache.transformDocument(
@@ -551,7 +563,7 @@ export function registerTests(
       data: { __typename: 'Query', person },
     });
 
-    const fn = jest.fn();
+    const fn = mock.fn<Cache.WatchCallback<PersonQuery>>();
     cache.watch({
       query: personDocument,
       variables: { id: person.id },
@@ -584,20 +596,22 @@ export function registerTests(
       });
     }
 
-    expect(fn).toHaveBeenCalledWith<
-      Parameters<Cache.WatchCallback<PersonQuery>>
-    >(
-      {
-        complete: true,
-        result: expect.objectContaining({
-          person: { ...person, name: `Modified_${person.name}` },
-        }),
-      },
-      undefined
+    assert.ok(
+      fn.mock.calls.some((call) =>
+        isPartialDeepStrictEqualWithUnwrapProxy(call.arguments, [
+          {
+            complete: true,
+            result: {
+              person: { ...person, name: `Modified_${person.name}` },
+            },
+          },
+          undefined,
+        ])
+      )
     );
   });
 
-  test('delete data and receive watch callback (returnPartialData = undefined)', () => {
+  void test('delete data and receive watch callback (returnPartialData = undefined)', () => {
     const cache = makeCache();
 
     const personDocument = cache.transformDocument(
@@ -612,7 +626,7 @@ export function registerTests(
       data: { __typename: 'Query', person },
     });
 
-    const fn = jest.fn();
+    const fn = mock.fn<Cache.WatchCallback<PersonQuery>>();
     cache.watch({
       query: personDocument,
       variables: { id: person.id },
@@ -637,19 +651,20 @@ export function registerTests(
       },
     });
 
-    expect(fn).toHaveBeenCalledWith<
-      Parameters<Cache.WatchCallback<PersonQuery>>
-    >(
-      {
-        complete: false,
-        missing: expect.any(MissingFieldError),
-        result: expect.toBeOneOf([expect.anything(), null]),
-      },
-      undefined
+    assert.ok(
+      fn.mock.calls.some((call) => {
+        const arg = call.arguments[0];
+        if (arg == null) {
+          return false;
+        }
+        return (
+          arg.complete === false && arg.missing instanceof MissingFieldError
+        );
+      })
     );
   });
 
-  test('delete data and receive watch callback (returnPartialData = false)', () => {
+  void test('delete data and receive watch callback (returnPartialData = false)', () => {
     const cache = makeCache();
 
     const personDocument = cache.transformDocument(
@@ -664,7 +679,7 @@ export function registerTests(
       data: { __typename: 'Query', person },
     });
 
-    const fn = jest.fn();
+    const fn = mock.fn<Cache.WatchCallback<PersonQuery>>();
     cache.watch({
       query: personDocument,
       variables: { id: person.id },
@@ -689,19 +704,21 @@ export function registerTests(
         },
       },
     });
-    expect(fn).toHaveBeenCalledWith<
-      Parameters<Cache.WatchCallback<PersonQuery>>
-    >(
-      {
-        complete: false,
-        missing: expect.any(MissingFieldError),
-        result: null,
-      },
-      undefined
+
+    assert.ok(
+      fn.mock.calls.some((call) => {
+        const arg = call.arguments[0];
+        if (arg == null) {
+          return false;
+        }
+        return (
+          arg.complete === false && arg.missing instanceof MissingFieldError
+        );
+      })
     );
   });
 
-  test('delete entire data and will fail to read query (missing error)', () => {
+  void test('delete entire data and will fail to read query (missing error)', () => {
     const cache = makeCache();
 
     const personDocument = cache.transformDocument(
@@ -733,22 +750,18 @@ export function registerTests(
       },
     });
 
-    expect(
-      cache.diff({
-        query: personDocument,
-        variables: { id: person.id },
-        optimistic: false,
-        returnPartialData: false,
-      })
-    ).toEqual({
-      complete: false,
-      missing: expect.any(MissingFieldError),
-      result: null,
+    const r = cache.diff({
+      query: personDocument,
+      variables: { id: person.id },
+      optimistic: false,
+      returnPartialData: false,
     });
+    assert.ok(r.complete === false);
+    assert.ok(r.missing instanceof MissingFieldError);
   });
 
   if (cacheType === 'normalized') {
-    test('delete field and will fail to read query (missing error)', () => {
+    void test('delete field and will fail to read query (missing error)', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -771,22 +784,17 @@ export function registerTests(
           },
         },
       });
-
-      expect(
-        cache.diff({
-          query: personDocument,
-          variables: { id: person.id },
-          optimistic: false,
-          returnPartialData: false,
-        })
-      ).toEqual({
-        complete: false,
-        missing: expect.any(MissingFieldError),
-        result: null,
+      const r = cache.diff({
+        query: personDocument,
+        variables: { id: person.id },
+        optimistic: false,
+        returnPartialData: false,
       });
+      assert.ok(r.complete === false);
+      assert.ok(r.missing instanceof MissingFieldError);
     });
 
-    test('should remain read data after delete field', () => {
+    void test('should remain read data after delete field', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -822,7 +830,7 @@ export function registerTests(
       );
     });
 
-    test('should remain read data after delete entire data', () => {
+    void test('should remain read data after delete entire data', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -867,7 +875,7 @@ export function registerTests(
       );
     });
 
-    test('evict data and receive watch callback', () => {
+    void test('evict data and receive watch callback', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -882,7 +890,7 @@ export function registerTests(
         data: { __typename: 'Query', person },
       });
 
-      const fn = jest.fn();
+      const fn = mock.fn<Cache.WatchCallback<PersonQuery>>();
       cache.watch({
         query: personDocument,
         variables: { id: person.id },
@@ -892,19 +900,20 @@ export function registerTests(
 
       cache.evict({ id: cache.identify(person) });
 
-      expect(fn).toHaveBeenCalledWith<
-        Parameters<Cache.WatchCallback<PersonQuery>>
-      >(
-        {
-          complete: false,
-          missing: expect.any(MissingFieldError),
-          result: expect.toBeOneOf([expect.anything(), null]),
-        },
-        undefined
+      assert.ok(
+        fn.mock.calls.some((call) => {
+          const arg = call.arguments[0];
+          if (arg == null) {
+            return false;
+          }
+          return (
+            arg.complete === false && arg.missing instanceof MissingFieldError
+          );
+        })
       );
     });
 
-    test('evict data but not receive watch callback when broadcast = false', () => {
+    void test('evict data but not receive watch callback when broadcast = false', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -919,7 +928,7 @@ export function registerTests(
         data: { __typename: 'Query', person },
       });
 
-      const fn = jest.fn();
+      const fn = mock.fn();
       cache.watch({
         query: personDocument,
         variables: { id: person.id },
@@ -929,11 +938,11 @@ export function registerTests(
 
       cache.evict({ id: cache.identify(person), broadcast: false });
 
-      expect(fn).not.toHaveBeenCalled();
+      assert.equal(fn.mock.callCount(), 0);
     });
   }
 
-  test('write and read query with fragment', () => {
+  void test('write and read query with fragment', () => {
     const cache = makeCache();
 
     const personDocumentWithFragment = cache.transformDocument(
@@ -959,15 +968,13 @@ export function registerTests(
         id: person.id,
       },
     });
-    expect(q1).toEqual(
-      expect.objectContaining({
-        person,
-      })
-    );
+    assertPartialEqual(q1, {
+      person,
+    });
   });
 
   if (cacheType === 'normalized') {
-    test('write and read fragment', () => {
+    void test('write and read fragment', () => {
       const cache = makeCache();
 
       const personChunkFragment = cache.transformDocument(
@@ -985,14 +992,14 @@ export function registerTests(
         fragment: personChunkFragment,
         id: cache.identify(person),
       });
-      expect(q1).toEqual<PersonFragment>({
+      assertPartialEqual(q1, {
         __typename: 'Person',
         id: person.id,
         name: person.name,
         address: person.address,
       });
     });
-    test('write query and read fragment', () => {
+    void test('write query and read fragment', () => {
       const cache = makeCache();
 
       const personDocument = cache.transformDocument(
@@ -1019,7 +1026,7 @@ export function registerTests(
         fragment: personChunkFragment,
         id: cache.identify(person),
       });
-      expect(q1).toEqual<PersonFragment>({
+      assertPartialEqual(q1, {
         __typename: 'Person',
         id: person.id,
         name: person.name,

@@ -1,6 +1,6 @@
-import isProxyObject from './isProxyObject.mjs';
-import proxyObjectGetter from './proxyObjectGetter.mjs';
-import { PROXY_SYMBOL_RECORDED, type ProxyObject } from './types.mjs';
+import isProxyObject from './isProxyObject.mts';
+import proxyObjectGetter from './proxyObjectGetter.mts';
+import { PROXY_SYMBOL_RECORDED, type ProxyObject } from './types.mts';
 
 function recordProxyObjectImpl(proxy: unknown, seen: WeakSet<object>) {
   if (proxy instanceof Array) {

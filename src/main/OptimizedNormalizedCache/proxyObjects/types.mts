@@ -1,11 +1,11 @@
 import type { SelectionSetNode } from 'graphql';
-import type { FragmentMap, SupertypeMap } from '../internalTypes.mjs';
+import type { FragmentMap, SupertypeMap } from '../internalTypes.mts';
 import type {
   DataIdFromObjectFunction,
   KeyFields,
   OptimizedReadMap,
   ReadFromIdFunction,
-} from '../types.mjs';
+} from '../types.mts';
 
 // @internal
 export const PROXY_SYMBOL_DIRTY = Symbol('snc:proxyDirty');

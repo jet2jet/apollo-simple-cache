@@ -1,12 +1,12 @@
 import type { SelectionSetNode } from 'graphql';
-import type { FragmentMap } from '../internalTypes.mjs';
+import type { FragmentMap } from '../internalTypes.mts';
 import {
   type RevokedProxyRecords,
   type ProxyCacheEntry,
   type ProxyCacheMap,
   type ProxyCacheRecord,
   PROXY_SYMBOL_DIRTY,
-} from './types.mjs';
+} from './types.mts';
 
 // @internal
 export default function findExistingProxy(

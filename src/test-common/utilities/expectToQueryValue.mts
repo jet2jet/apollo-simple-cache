@@ -1,10 +1,12 @@
 import type { DocumentNode } from 'graphql';
+import { assertDeepEqualWithUnwrapProxy } from './asserts.mts';
+// The following imports should be same for '#main/*'
 import type {
   FragmentMap,
   SelectionTuple,
-} from '@/OptimizedNormalizedCache/internalTypes.mjs';
-import getCachedSelections from '@/OptimizedNormalizedCache/utilities/getCachedSelections.mjs';
-import getMainDefinition from '@/utilities/getMainDefinition.mjs';
+} from '#main-v4/OptimizedNormalizedCache/internalTypes.mts';
+import getCachedSelections from '#main-v4/OptimizedNormalizedCache/utilities/getCachedSelections.mts';
+import getMainDefinition from '#main-v4/utilities/getMainDefinition.mts';
 
 function adjustExpectedObject(
   actual: unknown,
@@ -97,7 +99,8 @@ export default function expectToQueryValue<T>(
   fragmentMap: FragmentMap = {}
 ): void {
   const mainDefinition = getMainDefinition(document);
-  expect(actual).toEqual(
+  assertDeepEqualWithUnwrapProxy(
+    actual,
     adjustExpectedObject(
       actual,
       expected,

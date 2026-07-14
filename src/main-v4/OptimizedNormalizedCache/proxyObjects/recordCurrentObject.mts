@@ -1,5 +1,5 @@
-import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mjs';
-import recordProxyObject from './recordProxyObject.mjs';
+import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mts';
+import recordProxyObject from './recordProxyObject.mts';
 
 // @internal
 export default function recordCurrentObject(dataStoreObject: unknown): void {

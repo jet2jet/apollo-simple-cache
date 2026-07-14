@@ -13,7 +13,7 @@ import type {
   ChangePersonOnlyVariablesType,
   CityType,
   PrefectureType,
-} from './types.mjs';
+} from './types.mts';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type NoVariables = {};

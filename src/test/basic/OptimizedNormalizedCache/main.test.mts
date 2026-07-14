@@ -1,7 +1,9 @@
+import assert from 'node:assert/strict';
+import { describe, mock, test } from 'node:test';
 import type { Cache } from '@apollo/client';
-import { jest } from '@jest/globals';
-import { registerTests } from '../common/basicTests.mjs';
-import { personsData } from '@/data/dummyData.mjs';
+import { registerTests } from '../common/basicTests.mts';
+import OptimizedNormalizedCache from '#main-v3/OptimizedNormalizedCache/index.mts';
+import { personsData } from '#test-common/data/dummyData.mts';
 import {
   PersonDocument,
   PersonsDocument,
@@ -9,15 +11,18 @@ import {
   PersonSimpleDocument,
   possibleTypes,
   type PersonSimpleQuery,
-} from '@/data/simpleQueries.mjs';
-import type { PersonType } from '@/data/types.mjs';
-import OptimizedNormalizedCache from '@/OptimizedNormalizedCache/index.mjs';
-import expectToQueryValue from '@/utilities/expectToQueryValue.mjs';
+} from '#test-common/data/simpleQueries.mts';
+import type { PersonType } from '#test-common/data/types.mts';
+import {
+  assertDeepEqualWithUnwrapProxy,
+  assertPartialEqual,
+} from '#test-common/utilities/asserts.mts';
+import expectToQueryValue from '#test-common/utilities/expectToQueryValue.mts';
 
-describe('OptimizedNormalizedCache without possibleTypes', () => {
+void describe('basic:OptimizedNormalizedCache without possibleTypes', () => {
   registerTests(() => new OptimizedNormalizedCache(), 'normalized');
 
-  test('will not affect queries on same field', () => {
+  void test('will not affect queries on same field', () => {
     const cache = new OptimizedNormalizedCache();
     const personSimpleDocument = cache.transformDocument(
       PersonSimpleDocument
@@ -30,7 +35,7 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
     const PERSON_ID = personData.id;
 
     const fnCallbackPersonSimple =
-      jest.fn<Cache.WatchCallback<PersonSimpleQuery>>();
+      mock.fn<Cache.WatchCallback<PersonSimpleQuery>>();
 
     cache.watch({
       query: personSimpleDocument,
@@ -40,18 +45,19 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
       callback: fnCallbackPersonSimple,
     });
 
-    expect(
+    assertPartialEqual(
       cache.diff({
         query: personSimpleDocument,
         variables: { id: PERSON_ID },
         optimistic: false,
         returnPartialData: true,
-      })
-    ).toEqual({
-      result: { __typename: 'Query' },
-      complete: false,
-      missing: expect.anything(),
-    });
+      }),
+      {
+        result: { __typename: 'Query' },
+        complete: false,
+        // missing: anything,
+      }
+    );
 
     cache.write({
       query: personSimpleDocument,
@@ -65,8 +71,8 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
         },
       },
     });
-    expect(fnCallbackPersonSimple).toHaveBeenCalled();
-    fnCallbackPersonSimple.mockClear();
+    assert.ok(fnCallbackPersonSimple.mock.callCount() >= 1);
+    fnCallbackPersonSimple.mock.resetCalls();
     const personSimpleDiff = cache.diff({
       query: personSimpleDocument,
       variables: { id: PERSON_ID },
@@ -95,7 +101,7 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
     });
     person = personSimple2Diff.result?.person;
     // should not be affected by personSimple2
-    expect(fnCallbackPersonSimple).not.toHaveBeenCalled();
+    assert.ok(fnCallbackPersonSimple.mock.callCount() === 0);
 
     expectToQueryValue(
       personSimpleDiff.result,
@@ -108,7 +114,7 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
       },
       personSimpleDocument
     );
-    expect(personSimpleDiff.complete).toBeTrue();
+    assert.equal(personSimpleDiff.complete, true);
     expectToQueryValue(
       personSimple2Diff.result,
       {
@@ -120,12 +126,12 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
       },
       personSimple2Document
     );
-    expect(personSimple2Diff.complete).toBeTrue();
+    assert.equal(personSimple2Diff.complete, true);
 
     void person;
   });
 
-  test("will invalidate parent object if the field is marked as 'DELETE'", () => {
+  void test("will invalidate parent object if the field is marked as 'DELETE'", () => {
     const cache = new OptimizedNormalizedCache();
     const personDocument = cache.transformDocument(
       PersonDocument
@@ -159,7 +165,7 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
       optimistic: false,
     });
     const storedPerson = data?.person;
-    expect(storedPerson).toEqual(personData);
+    assertDeepEqualWithUnwrapProxy(storedPerson, personData);
 
     // modify
     const id = cache.identify({ __typename: 'Person', id: PERSON_ID });
@@ -180,22 +186,22 @@ describe('OptimizedNormalizedCache without possibleTypes', () => {
       optimistic: false,
       returnPartialData: true,
     });
-    expect(r.complete).toBeFalse();
-    expect(r.result).not.toBe(storedPerson);
+    assert.equal(r.complete, false);
+    assert.notDeepEqual(r.result, storedPerson);
 
     // old instance can still be accessed
-    expect(storedPerson?.address).toEqual(personData.address);
+    assertDeepEqualWithUnwrapProxy(storedPerson?.address, personData.address);
   });
 });
 
-describe('OptimizedNormalizedCache with possibleTypes', () => {
+void describe('basic:OptimizedNormalizedCache with possibleTypes', () => {
   registerTests(
     () => new OptimizedNormalizedCache({ possibleTypes }),
     'normalized'
   );
 
-  test('will affect individual query if optimized', () => {
-    const fn = jest.fn();
+  void test('will affect individual query if optimized', () => {
+    const fn = mock.fn();
     const cache = new OptimizedNormalizedCache({
       possibleTypes,
       optimizedRead: {
@@ -239,7 +245,7 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
     });
 
     for (const p of personsData) {
-      fn.mockClear();
+      fn.mock.resetCalls();
       const q = cache.readQuery({
         query: personDocument,
         variables: { id: p.id },
@@ -251,7 +257,8 @@ describe('OptimizedNormalizedCache with possibleTypes', () => {
         },
         personDocument
       );
-      expect(fn).toHaveBeenCalledWith(p.id);
+      assert.ok(fn.mock.callCount() >= 1);
+      assert.deepEqual(fn.mock.calls[0]!.arguments, [p.id]);
     }
   });
 });

@@ -1,4 +1,4 @@
-import canonicalStringify from './canonicalStringify.mjs';
+import canonicalStringify from './canonicalStringify.mts';
 
 // @internal
 export default function variablesToString(variables: unknown): string {

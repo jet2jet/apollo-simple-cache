@@ -1,11 +1,11 @@
-import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mjs';
-import recordProxyObject from '../proxyObjects/recordProxyObject.mjs';
+import { SYMBOL_PROXY_ARRAY, type DataStoreObject } from '../internalTypes.mts';
+import recordProxyObject from '../proxyObjects/recordProxyObject.mts';
 import {
   PROXY_SYMBOL_DIRTY,
   PROXY_SYMBOL_FRAGMENT_MAP,
   PROXY_SYMBOL_SELECTION_SETS,
-} from '../proxyObjects/types.mjs';
-import getCachedSelections from './getCachedSelections.mjs';
+} from '../proxyObjects/types.mts';
+import getCachedSelections from './getCachedSelections.mts';
 
 /** If fieldName is missing, record current snapshot */
 // @internal

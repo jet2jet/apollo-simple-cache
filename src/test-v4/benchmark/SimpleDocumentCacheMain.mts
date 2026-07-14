@@ -1,6 +1,6 @@
 import type { ApolloCache } from '@apollo/client';
-import type { Config } from './addTasks.mjs';
-import SimpleDocumentCache from '@/SimpleDocumentCache/index.mjs';
+import type { Config } from './addTasks.mts';
+import SimpleDocumentCache from '#main-v4/SimpleDocumentCache/index.mts';
 
 export const config: Config = {
   name: 'SimpleDocumentCache',

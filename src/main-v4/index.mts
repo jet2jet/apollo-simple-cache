@@ -1,4 +1,4 @@
-export * from './SimpleDocumentCache/index.mjs';
-export * from './OptimizedNormalizedCache/index.mjs';
-export { default as SimpleDocumentCache } from './SimpleDocumentCache/index.mjs';
-export { default as OptimizedNormalizedCache } from './OptimizedNormalizedCache/index.mjs';
+export * from './SimpleDocumentCache/index.mts';
+export * from './OptimizedNormalizedCache/index.mts';
+export { default as SimpleDocumentCache } from './SimpleDocumentCache/index.mts';
+export { default as OptimizedNormalizedCache } from './OptimizedNormalizedCache/index.mts';

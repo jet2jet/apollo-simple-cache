@@ -1,5 +1,5 @@
-import type { FieldWithArguments } from '../internalTypes.mjs';
-import isMatchArguments from './isMatchArguments.mjs';
+import type { FieldWithArguments } from '../internalTypes.mts';
+import isMatchArguments from './isMatchArguments.mts';
 
 // @internal
 export default function deleteRecordOfFieldWithArguments(

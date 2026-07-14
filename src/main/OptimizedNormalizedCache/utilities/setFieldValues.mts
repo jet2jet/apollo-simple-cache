@@ -1,7 +1,7 @@
 import { type Reference, type StoreObject } from '@apollo/client';
 import type { FieldNode, SelectionSetNode } from 'graphql';
-import equal from '../../utilities/equal.mjs';
-import hasOwn from '../../utilities/hasOwn.mjs';
+import equal from '../../utilities/equal.mts';
+import hasOwn from '../../utilities/hasOwn.mts';
 import {
   SYMBOL_PROXY_ARRAY,
   type ChangedFields,
@@ -10,17 +10,17 @@ import {
   type FragmentMap,
   type SliceFirst,
   type SupertypeMap,
-} from '../internalTypes.mjs';
-import type { DataIdFromObjectFunction, WriteToCacheMap } from '../types.mjs';
-import getActualTypename from './getActualTypename.mjs';
-import getCachedSelections from './getCachedSelections.mjs';
-import getEffectiveArguments from './getEffectiveArguments.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import isReference from './isReference.mjs';
-import makeReference from './makeReference.mjs';
-import markProxyDirty from './markProxyDirty.mjs';
-import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
-import releaseDataStoreObject from './releaseDataStoreObject.mjs';
+} from '../internalTypes.mts';
+import type { DataIdFromObjectFunction, WriteToCacheMap } from '../types.mts';
+import getActualTypename from './getActualTypename.mts';
+import getCachedSelections from './getCachedSelections.mts';
+import getEffectiveArguments from './getEffectiveArguments.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import isReference from './isReference.mts';
+import makeReference from './makeReference.mts';
+import markProxyDirty from './markProxyDirty.mts';
+import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mts';
+import releaseDataStoreObject from './releaseDataStoreObject.mts';
 
 interface SetFieldValuesContext {
   /** rootStore */

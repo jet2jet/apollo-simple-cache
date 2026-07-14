@@ -1,2 +1,2 @@
-export * from './types.mjs';
-export { default } from './OptimizedNormalizedCache.mjs';
+export * from './types.mts';
+export { default } from './OptimizedNormalizedCache.mts';

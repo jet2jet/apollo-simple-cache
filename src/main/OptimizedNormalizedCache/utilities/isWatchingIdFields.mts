@@ -4,11 +4,11 @@ import type {
   ChangedFields,
   ChangedFieldsArray,
   SupertypeMap,
-} from '../internalTypes.mjs';
-import type { DataIdFromObjectFunction, KeyFields } from '../types.mjs';
-import getCachedSelections from './getCachedSelections.mjs';
-import getFieldValue from './getFieldValue.mjs';
-import isWatchingFields from './isWatchingFields.mjs';
+} from '../internalTypes.mts';
+import type { DataIdFromObjectFunction, KeyFields } from '../types.mts';
+import getCachedSelections from './getCachedSelections.mts';
+import getFieldValue from './getFieldValue.mts';
+import isWatchingFields from './isWatchingFields.mts';
 
 function noop(): never {
   throw new Error();

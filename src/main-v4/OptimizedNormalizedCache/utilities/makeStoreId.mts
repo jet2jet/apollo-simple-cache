@@ -1,7 +1,7 @@
 import type { StoreObject } from '@apollo/client';
-import type { SupertypeMap } from '../internalTypes.mjs';
-import type { KeyFields } from '../types.mjs';
-import getKeyFields from './getKeyFields.mjs';
+import type { SupertypeMap } from '../internalTypes.mts';
+import type { KeyFields } from '../types.mts';
+import getKeyFields from './getKeyFields.mts';
 
 // @internal
 export default function makeStoreId(

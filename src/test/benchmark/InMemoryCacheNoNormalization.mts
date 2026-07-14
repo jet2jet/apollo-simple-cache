@@ -1,5 +1,5 @@
 import { ApolloCache, InMemoryCache } from '@apollo/client';
-import type { Config } from './addTasks.mjs';
+import type { Config } from './addTasks.mts';
 
 export const config: Config = {
   name: 'InMemoryCache(no normalization)',

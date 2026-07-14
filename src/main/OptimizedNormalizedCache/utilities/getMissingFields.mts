@@ -1,13 +1,13 @@
 import type { StoreObject } from '@apollo/client';
 import type { SelectionSetNode } from 'graphql';
-import type { FragmentMap, SupertypeMap } from '../internalTypes.mjs';
-import type { OptimizedReadContext, OptimizedReadMap } from '../types.mjs';
-import getActualTypename from './getActualTypename.mjs';
-import getCachedSelections from './getCachedSelections.mjs';
-import getEffectiveArguments from './getEffectiveArguments.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import isReference from './isReference.mjs';
-import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+import type { FragmentMap, SupertypeMap } from '../internalTypes.mts';
+import type { OptimizedReadContext, OptimizedReadMap } from '../types.mts';
+import getActualTypename from './getActualTypename.mts';
+import getCachedSelections from './getCachedSelections.mts';
+import getEffectiveArguments from './getEffectiveArguments.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import isReference from './isReference.mts';
+import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mts';
 
 /** Picks missing fields from current data object. */
 // @internal

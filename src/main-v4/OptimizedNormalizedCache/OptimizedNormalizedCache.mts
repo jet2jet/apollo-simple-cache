@@ -23,10 +23,10 @@ import {
   type InlineFragmentNode,
   type SelectionSetNode,
 } from 'graphql';
-import cloneVariables from '../utilities/cloneVariables.mjs';
-import getMainDefinition from '../utilities/getMainDefinition.mjs';
-import hasOwn from '../utilities/hasOwn.mjs';
-import variablesToString from '../utilities/variablesToString.mjs';
+import cloneVariables from '../utilities/cloneVariables.mts';
+import getMainDefinition from '../utilities/getMainDefinition.mts';
+import hasOwn from '../utilities/hasOwn.mts';
+import variablesToString from '../utilities/variablesToString.mts';
 import {
   SYMBOL_PROXY_ARRAY,
   type ChangedFieldsArray,
@@ -34,9 +34,9 @@ import {
   type FragmentMap,
   type MissingFieldRecord,
   type SupertypeMap,
-} from './internalTypes.mjs';
-import isProxyObject from './proxyObjects/isProxyObject.mjs';
-import makeProxyObject from './proxyObjects/makeProxyObject.mjs';
+} from './internalTypes.mts';
+import isProxyObject from './proxyObjects/isProxyObject.mts';
+import makeProxyObject from './proxyObjects/makeProxyObject.mts';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_DIRTY,
@@ -45,7 +45,7 @@ import {
   type ProxyCacheRecord,
   type ProxyObject,
   type RevokedProxyRecords,
-} from './proxyObjects/types.mjs';
+} from './proxyObjects/types.mts';
 import type {
   DataIdFromObjectFunction,
   KeyFields,
@@ -53,20 +53,20 @@ import type {
   OptimizedReadMap,
   ReadFromIdFunction,
   WriteToCacheMap,
-} from './types.mjs';
-import evictData from './utilities/evictData.mjs';
-import getActualTypename from './utilities/getActualTypename.mjs';
-import getFragmentMap from './utilities/getFragmentMap.mjs';
-import getMissingFields from './utilities/getMissingFields.mjs';
-import isObjectUsing from './utilities/isObjectUsing.mjs';
-import isWatchingFields from './utilities/isWatchingFields.mjs';
-import isWatchingIdFields from './utilities/isWatchingIdFields.mjs';
-import makeReference from './utilities/makeReference.mjs';
-import makeStoreId from './utilities/makeStoreId.mjs';
-import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mjs';
-import modifyField from './utilities/modifyField.mjs';
-import releaseDataStoreObject from './utilities/releaseDataStoreObject.mjs';
-import setFieldValues from './utilities/setFieldValues.mjs';
+} from './types.mts';
+import evictData from './utilities/evictData.mts';
+import getActualTypename from './utilities/getActualTypename.mts';
+import getFragmentMap from './utilities/getFragmentMap.mts';
+import getMissingFields from './utilities/getMissingFields.mts';
+import isObjectUsing from './utilities/isObjectUsing.mts';
+import isWatchingFields from './utilities/isWatchingFields.mts';
+import isWatchingIdFields from './utilities/isWatchingIdFields.mts';
+import makeReference from './utilities/makeReference.mts';
+import makeStoreId from './utilities/makeStoreId.mts';
+import markProxyDirtyRecursive from './utilities/markProxyDirtyRecursive.mts';
+import modifyField from './utilities/modifyField.mts';
+import releaseDataStoreObject from './utilities/releaseDataStoreObject.mts';
+import setFieldValues from './utilities/setFieldValues.mts';
 
 type ToReferenceFunction = NormalizedCache['toReference'];
 type CanReadFunction = NormalizedCache['canRead'];

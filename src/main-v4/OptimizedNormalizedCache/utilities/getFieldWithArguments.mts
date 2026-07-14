@@ -1,5 +1,5 @@
-import type { FieldWithArguments } from '../internalTypes.mjs';
-import makeFieldWithArgumentsName from './makeFieldWithArgumentsName.mjs';
+import type { FieldWithArguments } from '../internalTypes.mts';
+import makeFieldWithArgumentsName from './makeFieldWithArgumentsName.mts';
 
 // @internal
 export default function getFieldWithArguments(

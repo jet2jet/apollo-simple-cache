@@ -10,14 +10,14 @@ import {
   type GraphQLNamedType,
   GraphQLInputObjectType,
 } from 'graphql';
-import cloneDeep from '../utilities/cloneDeep.mjs';
-import { locationsData, personsData } from './dummyData.mjs';
+import cloneDeep from '../utilities/cloneDeep.mts';
+import { locationsData, personsData } from './dummyData.mts';
 import type {
   LocationType,
   PersonInputType,
   PersonType,
   QueryType,
-} from './types.mjs';
+} from './types.mts';
 
 const LocationType = new GraphQLInterfaceType({
   name: 'Location',

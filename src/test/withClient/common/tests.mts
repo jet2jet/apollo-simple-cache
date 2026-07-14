@@ -1,3 +1,5 @@
+import { AssertionError } from 'node:assert';
+import { test } from 'node:test';
 import {
   ApolloCache,
   useApolloClient,
@@ -7,16 +9,17 @@ import {
 import { cloneDeep } from '@apollo/client/utilities';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { makeWrapper } from './utililites.jsx';
-import { personsData } from '@/data/dummyData.mjs';
+import { makeWrapper } from './utililites.mts';
+import { personsData } from '#test-common/data/dummyData.mts';
 import {
   ChangePersonMutationDocument,
   ChangePersonOnlyMutationDocument,
   PersonDocument,
   PersonsDocument,
   type PersonQuery,
-} from '@/data/simpleQueries.mjs';
-import type { PersonType } from '@/data/types.mjs';
+} from '#test-common/data/simpleQueries.mts';
+import type { PersonType } from '#test-common/data/types.mts';
+import { isDeepStrictEqualWithUnwrapProxy } from '#test-common/utilities/asserts.mts';
 
 function cloneObjectWithoutTypename<T>(value: Readonly<T>): T;
 function cloneObjectWithoutTypename<T>(value: T): T;
@@ -40,11 +43,20 @@ function cloneObjectWithoutTypename<T>(value: T): T {
   return newObj;
 }
 
+function assertOKForTestingLibrary(value: unknown): asserts value {
+  // Use AssertionError instead of `assert.ok` since `assert.ok` may hang up in Node.js v20
+  if (!value) {
+    throw new AssertionError({
+      message: 'Assertion failed for value: ' + String(value),
+    });
+  }
+}
+
 export function registerTests(
   makeCache: () => ApolloCache<unknown>,
   _cacheType: 'normalized' | 'document' | 'no-normalized'
 ): void {
-  test('read query', async () => {
+  void test('read query', async () => {
     const cache = makeCache();
 
     const personsWithoutTypename = cloneObjectWithoutTypename(personsData);
@@ -60,15 +72,19 @@ export function registerTests(
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual(
-        expect.objectContaining({
-          persons: expect.toBeOneOf([personsData, personsWithoutTypename]),
-        })
+      assertOKForTestingLibrary(typeof result.current === 'object');
+      assertOKForTestingLibrary(result.current != null);
+      assertOKForTestingLibrary(
+        isDeepStrictEqualWithUnwrapProxy(result.current.persons, personsData) ||
+          isDeepStrictEqualWithUnwrapProxy(
+            result.current.persons,
+            personsWithoutTypename
+          )
       );
     });
   });
 
-  test('execute mutation with update data', async () => {
+  void test('execute mutation with update data', async () => {
     const cache = makeCache();
 
     const person = personsData[0]!;
@@ -125,16 +141,22 @@ export function registerTests(
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual(
-        expect.toBeOneOf([
-          [person, { ...person, name: 'Hello' }],
-          [personWithoutTypename, { ...personWithoutTypename, name: 'Hello' }],
-        ])
+      assertOKForTestingLibrary(typeof result.current === 'object');
+      assertOKForTestingLibrary(result.current != null);
+      assertOKForTestingLibrary(
+        isDeepStrictEqualWithUnwrapProxy(result.current, [
+          person,
+          { ...person, name: 'Hello' },
+        ]) ||
+          isDeepStrictEqualWithUnwrapProxy(result.current, [
+            personWithoutTypename,
+            { ...personWithoutTypename, name: 'Hello' },
+          ])
       );
     });
   });
 
-  test('modify cache and re-retrieve', async () => {
+  void test('modify cache and re-retrieve', async () => {
     const cache = makeCache();
 
     const person = personsData[0]!;
@@ -230,7 +252,7 @@ export function registerTests(
     );
 
     await waitFor(() => {
-      expect(result.current.data).not.toBeNull();
+      assertOKForTestingLibrary(result.current.data != null);
     });
 
     act(() => {
@@ -238,10 +260,15 @@ export function registerTests(
     });
 
     await waitFor(() => {
-      expect(result.current.data).toEqual(
-        expect.objectContaining({
-          person: expect.toBeOneOf([person, personWithoutTypename]),
-        })
+      assertOKForTestingLibrary(result.current.data != null);
+      assertOKForTestingLibrary(typeof result.current.data.person === 'object');
+      assertOKForTestingLibrary(result.current.data.person != null);
+      assertOKForTestingLibrary(
+        isDeepStrictEqualWithUnwrapProxy(result.current.data.person, person) ||
+          isDeepStrictEqualWithUnwrapProxy(
+            result.current.data.person,
+            personWithoutTypename
+          )
       );
     });
 
@@ -250,13 +277,18 @@ export function registerTests(
     });
 
     await waitFor(() => {
-      expect(result.current.data).toEqual(
-        expect.objectContaining({
-          person: expect.toBeOneOf([
-            { ...person, name: 'Hello' },
-            { ...personWithoutTypename, name: 'Hello' },
-          ]),
-        })
+      assertOKForTestingLibrary(result.current.data != null);
+      assertOKForTestingLibrary(typeof result.current.data === 'object');
+      assertOKForTestingLibrary(result.current.data.person != null);
+      assertOKForTestingLibrary(
+        isDeepStrictEqualWithUnwrapProxy(result.current.data.person, {
+          ...person,
+          name: 'Hello',
+        }) ||
+          isDeepStrictEqualWithUnwrapProxy(result.current.data.person, {
+            ...personWithoutTypename,
+            name: 'Hello',
+          })
       );
     });
   });

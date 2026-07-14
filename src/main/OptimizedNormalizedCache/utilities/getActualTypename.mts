@@ -1,4 +1,4 @@
-import type { SupertypeMap } from '../internalTypes.mjs';
+import type { SupertypeMap } from '../internalTypes.mts';
 
 /**
  * For `supertypeMap = { A: [], B: ['A'], C: ['B', 'A'], D: ['A'] }`,

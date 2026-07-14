@@ -7,7 +7,7 @@ import {
   GraphQLList,
   GraphQLID,
 } from 'graphql';
-import { dummyUsers } from './complexDummyData.mjs';
+import { dummyUsers } from './complexDummyData.mts';
 
 // Forward declarations for circular references
 // Disable eslint rule

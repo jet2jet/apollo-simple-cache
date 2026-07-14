@@ -4,7 +4,7 @@ import {
   type SelectionNode,
   type SelectionSetNode,
 } from 'graphql';
-import type { FragmentMap, SelectionTuple } from '../internalTypes.mjs';
+import type { FragmentMap, SelectionTuple } from '../internalTypes.mts';
 
 const SYMBOL_CACHED_SELECTIONS = Symbol('snc:cachedSelections');
 
