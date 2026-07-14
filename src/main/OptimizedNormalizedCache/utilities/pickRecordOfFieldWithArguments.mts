@@ -1,8 +1,8 @@
 import type {
   FieldWithArguments,
   FieldWithArgumentsDataRecord,
-} from '../internalTypes.mjs';
-import isMatchArguments from './isMatchArguments.mjs';
+} from '../internalTypes.mts';
+import isMatchArguments from './isMatchArguments.mts';
 
 // @internal
 export default function pickRecordOfFieldWithArguments(

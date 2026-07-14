@@ -1,8 +1,8 @@
 import type { Cache } from '@apollo/client';
-import type { ChangedFields, ChangedFieldsArray } from '../internalTypes.mjs';
-import deleteRecordOfFieldWithArguments from './deleteRecordOfFieldWithArguments.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mjs';
+import type { ChangedFields, ChangedFieldsArray } from '../internalTypes.mts';
+import deleteRecordOfFieldWithArguments from './deleteRecordOfFieldWithArguments.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mts';
 
 // @internal
 export default function evictData(

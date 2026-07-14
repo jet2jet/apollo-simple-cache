@@ -1,6 +1,6 @@
 import type { ApolloCache } from '@apollo/client';
-import type { Config } from './addTasks.mjs';
-import OptimizedNormalizedCache from '@/OptimizedNormalizedCache/index.mjs';
+import type { Config } from './addTasks.mts';
+import OptimizedNormalizedCache from '#main-v4/OptimizedNormalizedCache/index.mts';
 
 export const config: Config = {
   name: 'OptimizedNormalizedCache',

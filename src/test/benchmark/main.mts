@@ -1,9 +1,9 @@
 import { Bench } from 'tinybench';
-import { addTasks } from './addTasks.mjs';
-import * as InMemoryCacheDefault from './InMemoryCacheDefault.mjs';
-import * as InMemoryCacheNoNormalization from './InMemoryCacheNoNormalization.mjs';
-import * as OptimizedNormalizedCacheMain from './OptimizedNormalizedCacheMain.mjs';
-import * as SimpleDocumentCacheMain from './SimpleDocumentCacheMain.mjs';
+import { addTasks } from './addTasks.mts';
+import * as InMemoryCacheDefault from './InMemoryCacheDefault.mts';
+import * as InMemoryCacheNoNormalization from './InMemoryCacheNoNormalization.mts';
+import * as OptimizedNormalizedCacheMain from './OptimizedNormalizedCacheMain.mts';
+import * as SimpleDocumentCacheMain from './SimpleDocumentCacheMain.mts';
 
 const mToNs = (ms: number) => ms * 1e6;
 const formatNumber = (

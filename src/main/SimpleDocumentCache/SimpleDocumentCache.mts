@@ -21,16 +21,16 @@ import { type DocumentNode } from 'graphql';
 import {
   DELETE_MODIFIER,
   INVALIDATE_MODIFIER,
-} from '../utilities/constants.mjs';
-import equal from '../utilities/equal.mjs';
-import getMainDefinition from '../utilities/getMainDefinition.mjs';
-import hasOwn from '../utilities/hasOwn.mjs';
-import variablesToString from '../utilities/variablesToString.mjs';
+} from '../utilities/constants.mts';
+import equal from '../utilities/equal.mts';
+import getMainDefinition from '../utilities/getMainDefinition.mts';
+import hasOwn from '../utilities/hasOwn.mts';
+import variablesToString from '../utilities/variablesToString.mts';
 import type {
   CacheKey,
   CacheObject,
   SimpleDocumentCacheOptions,
-} from './types.mjs';
+} from './types.mts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyData = any;

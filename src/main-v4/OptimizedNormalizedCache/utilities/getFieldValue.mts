@@ -1,16 +1,16 @@
 import type { StoreObject } from '@apollo/client';
 import type { ArgumentNode, FieldNode } from 'graphql';
-import type { SupertypeMap } from '../internalTypes.mjs';
+import type { SupertypeMap } from '../internalTypes.mts';
 import type {
   DataIdFromObjectFunction,
   OptimizedReadContext,
   OptimizedReadMap,
   ReadFromIdFunction,
-} from '../types.mjs';
-import getActualTypename from './getActualTypename.mjs';
-import getEffectiveArguments from './getEffectiveArguments.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+} from '../types.mts';
+import getActualTypename from './getActualTypename.mts';
+import getEffectiveArguments from './getEffectiveArguments.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mts';
 
 /** Returns field value with calculation of arguments and OptimizedRead */
 // @internal

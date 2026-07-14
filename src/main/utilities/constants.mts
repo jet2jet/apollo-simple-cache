@@ -1,7 +1,7 @@
 import type {
   DeleteModifier,
   InvalidateModifier,
-} from '@apollo/client/cache/core/types/common';
+} from '../OptimizedNormalizedCache/internalTypes.mts';
 
 // @internal
 export const DELETE_MODIFIER = {} as DeleteModifier;

@@ -4,6 +4,7 @@
 .vscode/
 .work/
 obj/
+scripts/
 src/
 tools/
 *.aps
@@ -22,6 +23,5 @@ yarn-error.log
 babel.config.json
 babel.config.*.json
 eslint.config.mjs
-jest.config.mjs
 tsconfig.json
 tsconfig.*.json

@@ -1,11 +1,11 @@
 import { isReference } from '@apollo/client';
 import type { ArgumentNode, SelectionSetNode } from 'graphql';
-import hasOwn from '../../utilities/hasOwn.mjs';
-import type { DataStoreObject, SelectionTuple } from '../internalTypes.mjs';
-import getCachedSelections from '../utilities/getCachedSelections.mjs';
-import getEffectiveArguments from '../utilities/getEffectiveArguments.mjs';
-import getFieldValue from '../utilities/getFieldValue.mjs';
-import { makeProxyObjectImpl } from './makeProxyObject.mjs';
+import hasOwn from '../../utilities/hasOwn.mts';
+import type { DataStoreObject, SelectionTuple } from '../internalTypes.mts';
+import getCachedSelections from '../utilities/getCachedSelections.mts';
+import getEffectiveArguments from '../utilities/getEffectiveArguments.mts';
+import getFieldValue from '../utilities/getFieldValue.mts';
+import { makeProxyObjectImpl } from './makeProxyObject.mts';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_BASE_CACHE,
@@ -18,7 +18,7 @@ import {
   PROXY_SYMBOL_VARIABLES,
   PROXY_SYMBOL_VARIABLES_STRING,
   type ProxyObject,
-} from './types.mjs';
+} from './types.mts';
 
 function isDirtyObject(val: unknown) {
   if (!val || typeof val !== 'object') {

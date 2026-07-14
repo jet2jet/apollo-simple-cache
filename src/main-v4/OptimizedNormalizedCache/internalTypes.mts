@@ -4,7 +4,7 @@ import type {
   FragmentDefinitionNode,
   SelectionSetNode,
 } from 'graphql';
-import type { ProxyObject } from './proxyObjects/types.mjs';
+import type { ProxyObject } from './proxyObjects/types.mts';
 
 // @internal
 export type FragmentMap = Record<string, FragmentDefinitionNode>;

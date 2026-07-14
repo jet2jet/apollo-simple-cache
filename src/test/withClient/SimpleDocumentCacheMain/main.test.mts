@@ -1,6 +1,7 @@
-import { registerTests } from '../common/tests.jsx';
-import SimpleDocumentCache from '@/SimpleDocumentCache/index.mjs';
+import { describe } from 'node:test';
+import { registerTests } from '../common/tests.mts';
+import SimpleDocumentCache from '#main-v3/SimpleDocumentCache/index.mts';
 
-describe('SimpleDocumentCache', () => {
+void describe('withClient:SimpleDocumentCache', () => {
   registerTests(() => new SimpleDocumentCache(), 'document');
 });

@@ -1,4 +1,4 @@
-import equal from '../../utilities/equal.mjs';
+import equal from '../../utilities/equal.mts';
 
 // @internal
 export default function isMatchArguments(

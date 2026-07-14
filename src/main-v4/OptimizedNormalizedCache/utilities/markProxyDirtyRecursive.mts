@@ -1,6 +1,6 @@
-import type { DataStoreObject } from '../internalTypes.mjs';
-import isReference from './isReference.mjs';
-import markProxyDirty from './markProxyDirty.mjs';
+import type { DataStoreObject } from '../internalTypes.mts';
+import isReference from './isReference.mts';
+import markProxyDirty from './markProxyDirty.mts';
 
 // @internal
 export default function markProxyDirtyRecursive(data: unknown): void {

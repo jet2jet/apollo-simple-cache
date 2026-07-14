@@ -1,17 +1,17 @@
 import { isReference } from '@apollo/client';
 import type { SelectionSetNode } from 'graphql';
-import equal from '../../utilities/equal.mjs';
+import equal from '../../utilities/equal.mts';
 import type {
   ChangedFields,
   ChangedFieldsArray,
   FragmentMap,
   SliceFirst,
   SupertypeMap,
-} from '../internalTypes.mjs';
-import type { DataIdFromObjectFunction, KeyFields } from '../types.mjs';
-import getCachedSelections from './getCachedSelections.mjs';
-import getEffectiveArguments from './getEffectiveArguments.mjs';
-import getFieldValue from './getFieldValue.mjs';
+} from '../internalTypes.mts';
+import type { DataIdFromObjectFunction, KeyFields } from '../types.mts';
+import getCachedSelections from './getCachedSelections.mts';
+import getEffectiveArguments from './getEffectiveArguments.mts';
+import getFieldValue from './getFieldValue.mts';
 
 function noop(): never {
   throw new Error();

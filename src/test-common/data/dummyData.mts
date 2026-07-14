@@ -1,11 +1,11 @@
 import * as crypto from 'crypto';
-import { DUMMY_ADDRESSES, DUMMY_NAMES } from './dummyDataList.mjs';
+import { DUMMY_ADDRESSES, DUMMY_NAMES } from './dummyDataList.mts';
 import type {
   CityType,
   LocationType,
   PersonType,
   PrefectureType,
-} from './types.mjs';
+} from './types.mts';
 
 const prefecturesData: ReadonlyArray<Readonly<PrefectureType>> =
   DUMMY_ADDRESSES.map((name, i) => {

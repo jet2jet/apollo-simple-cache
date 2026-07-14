@@ -2,18 +2,18 @@ import {
   ApolloCache,
   ApolloClient,
   ApolloLink,
+  ApolloProvider,
   Observable,
 } from '@apollo/client';
-import { ApolloProvider } from '@apollo/client/react';
 import { graphql, print } from 'graphql';
-import { type JSX, type ReactNode, useMemo } from 'react';
-import { schema } from '@/data/simpleSchemas.mjs';
+import { type JSX, type ReactNode, createElement, useMemo } from 'react';
+import { schema } from '#test-common/data/simpleSchemas.mts';
 
 function delay(wait: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, wait));
 }
 
-function createApolloClient(cache: ApolloCache) {
+function createApolloClient(cache: ApolloCache<unknown>) {
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       void (async () => {
@@ -42,10 +42,11 @@ function createApolloClient(cache: ApolloCache) {
 }
 
 export function makeWrapper(
-  cache: ApolloCache
+  cache: ApolloCache<unknown>
 ): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }) => {
     const client = useMemo(() => createApolloClient(cache), [cache]);
-    return <ApolloProvider client={client}>{children}</ApolloProvider>;
+    // eslint-disable-next-line react/no-children-prop
+    return createElement(ApolloProvider, { client, children });
   };
 }

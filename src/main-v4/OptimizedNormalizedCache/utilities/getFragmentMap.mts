@@ -1,5 +1,5 @@
 import { Kind, type DocumentNode } from 'graphql';
-import type { FragmentMap } from '../internalTypes.mjs';
+import type { FragmentMap } from '../internalTypes.mts';
 
 const SYMBOL_CACHED_FRAGMENT_MAP = Symbol('snc:cachedFragmentMap');
 

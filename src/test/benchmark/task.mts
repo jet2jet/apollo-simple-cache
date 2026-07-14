@@ -1,24 +1,24 @@
 import { InMemoryCache, type ApolloCache } from '@apollo/client';
+import { OptimizedNormalizedCache } from '#main-v3/index.mts';
 import {
   dummyGetAllUsersData,
   dummyGetUserByIdData,
   dummyGetUserPostsData,
-} from '@/data/complexDummyData.mjs';
+} from '#test-common/data/complexDummyData.mts';
 import {
   GetAllUsersDocument,
   GetUserByIdDocument,
   GetUserPostsDocument,
-} from '@/data/complexQueries.mjs';
-import { locationsData, personsData } from '@/data/dummyData.mjs';
+} from '#test-common/data/complexQueries.mts';
+import { locationsData, personsData } from '#test-common/data/dummyData.mts';
 import {
   LocationDocument,
   LocationsDocument,
   PersonDocument,
   PersonsDocument,
   PersonSimpleDocument,
-} from '@/data/simpleQueries.mjs';
-import { OptimizedNormalizedCache } from '@/index.mjs';
-import cloneDeep from '@/utilities/cloneDeep.mjs';
+} from '#test-common/data/simpleQueries.mts';
+import cloneDeep from '#test-common/utilities/cloneDeep.mts';
 
 export function taskReadWrite(cache: ApolloCache<unknown>): void {
   let o;

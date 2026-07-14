@@ -1,6 +1,6 @@
 import type { ApolloCache } from '@apollo/client';
 import type { Bench } from 'tinybench';
-import * as Task from './task.mjs';
+import * as Task from './task.mts';
 
 export interface Config {
   name: string;

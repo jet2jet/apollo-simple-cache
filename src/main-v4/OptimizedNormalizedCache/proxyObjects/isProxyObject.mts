@@ -1,4 +1,4 @@
-import { PROXY_SYMBOL_TARGET, type ProxyObject } from './types.mjs';
+import { PROXY_SYMBOL_TARGET, type ProxyObject } from './types.mts';
 
 // @internal
 export default function isProxyObject(object: unknown): object is ProxyObject {

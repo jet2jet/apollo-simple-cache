@@ -1,8 +1,9 @@
-import { InMemoryCache } from '@apollo/client';
-import { registerTests } from './basicTests.mjs';
-import { possibleTypes } from '@/data/simpleQueries.mjs';
+import { describe } from 'node:test';
+import { InMemoryCache } from '@apollo/client-v4';
+import { registerTests } from './basicTests.mts';
+import { possibleTypes } from '#test-common/data/simpleQueries.mts';
 
-describe('check tests for document cache', () => {
+void describe('basic:check tests for document cache', () => {
   registerTests(
     () =>
       new InMemoryCache({
@@ -20,10 +21,10 @@ describe('check tests for document cache', () => {
   );
 });
 
-describe('check tests for normalized cache', () => {
+void describe('basic:check tests for normalized cache', () => {
   registerTests(() => new InMemoryCache(), 'normalized');
 });
 
-describe('check tests for normalized cache with possibleTypes', () => {
+void describe('basic:check tests for normalized cache with possibleTypes', () => {
   registerTests(() => new InMemoryCache({ possibleTypes }), 'normalized');
 });

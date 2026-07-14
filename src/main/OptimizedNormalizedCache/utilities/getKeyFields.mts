@@ -1,5 +1,5 @@
-import type { SupertypeMap } from '../internalTypes.mjs';
-import type { KeyFields } from '../types.mjs';
+import type { SupertypeMap } from '../internalTypes.mts';
+import type { KeyFields } from '../types.mts';
 
 const defaultKeyFields = ['id'] as const;
 

@@ -72,20 +72,24 @@
       }
     }
   },
+  "imports": {
+    "#main-v3/*.mts": "./src/main/*.mts",
+    "#main-v4/*.mts": "./src/main-v4/*.mts",
+    "#test-common/*.mts": "./src/test-common/*.mts"
+  },
   "scripts": {
-    "postinstall": "node scripts/postinstall.cjs",
     "build": "npm run build:v3 && npm run build:v4",
     "build:v3": "npm run build:v3:esm && npm run build:v3:esm:dts && npm run build:v3:cjs && npm run build:v3:cjs:dts",
     "build:v3:esm": "babel src/main --extensions \".mts\" --out-file-extension \".mjs\" -d dist/esm",
-    "build:v3:esm:dts": "tsc --project src/main/tsconfig.json --emitDeclarationOnly",
+    "build:v3:esm:dts": "tsc --project src/main/tsconfig.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/esm mjs",
     "build:v3:cjs": "babel src/main --config-file ./babel.config.cjs.json --extensions \".mts\" --out-file-extension \".cjs\" -d dist/cjs",
-    "build:v3:cjs:dts": "tsc --project src/main/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs",
+    "build:v3:cjs:dts": "tsc --project src/main/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs cjs",
     "build:v4": "npm run build:v4:esm && npm run build:v4:esm:dts && npm run build:v4:cjs && npm run build:v4:cjs:dts",
     "build:v4:esm": "babel src/main-v4 --extensions \".mts\" --out-file-extension \".mjs\" -d dist/esm-v4",
-    "build:v4:esm:dts": "tsc --project src/main-v4/tsconfig.json --emitDeclarationOnly",
+    "build:v4:esm:dts": "tsc --project src/main-v4/tsconfig.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/esm-v4 mjs",
     "build:v4:cjs": "babel src/main-v4 --config-file ./babel.config.cjs.json --extensions \".mts\" --out-file-extension \".cjs\" -d dist/cjs-v4",
-    "build:v4:cjs:dts": "tsc --project src/main-v4/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs-v4",
-    "benchmark": "tsx --tsconfig src/test/tsconfig.json src/test/benchmark/main.mts",
+    "build:v4:cjs:dts": "tsc --project src/main-v4/tsconfig.cjs.json --emitDeclarationOnly && node scripts/renameDmtsToDcts.mjs dist/cjs-v4 cjs",
+    "benchmark": "tsx --tsconfig src/test/tsconfig.json --experimental-test-module-mocks --import ./src/test/setupTest.mts src/test/benchmark/main.mts",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix",
     "lint:eslint": "eslint",
@@ -98,8 +102,10 @@
     "typecheck:test": "tsc --project src/test/tsconfig.json --noEmit",
     "typecheck:test-v4": "tsc --project src/test-v4/tsconfig.json --noEmit",
     "test": "npm run test:v3 && npm run test:v4",
-    "test:v3": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.mjs",
-    "test:v4": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config-v4.mjs"
+    "test:v3": "npm run test:v3:base -- \"src/test/**/*.test.mts\"",
+    "test:v3:base": "glob -c \"tsx --experimental-test-module-mocks --import ./src/test/setupTest.mts --test\"",
+    "test:v4": "npm run test:v4:base -- \"src/test-v4/**/*.test.mts\"",
+    "test:v4:base": "glob -c \"tsx --experimental-test-module-mocks --import ./src/test-v4/setupTest.mts --test\""
   },
   "dependencies": {
     "@wry/equality": "^0.5.7"
@@ -112,7 +118,8 @@
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-typescript": "^7.27.1",
     "@testing-library/react": "^16.3.0",
-    "@types/jest": "^30.0.0",
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^20.19.43",
     "@types/react": "^19.1.8",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
@@ -122,14 +129,12 @@
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-promise": "^7.2.1",
-    "jest": "^30.0.4",
-    "jest-environment-jsdom": "^30.0.4",
-    "jest-extended": "^6.0.0",
+    "glob-bin": "^1.1.0",
+    "jsdom": "^29.1.1",
     "neostandard": "^0.12.2",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "tinybench": "^4.0.1",
-    "ts-jest": "^29.4.0",
     "tsx": "^4.20.3",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.37.0"

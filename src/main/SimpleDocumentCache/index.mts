@@ -1,2 +1,2 @@
-export * from './types.mjs';
-export { default } from './SimpleDocumentCache.mjs';
+export * from './types.mts';
+export { default } from './SimpleDocumentCache.mts';

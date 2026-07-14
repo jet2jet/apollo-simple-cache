@@ -11,26 +11,26 @@ import {
 import {
   DELETE_MODIFIER,
   INVALIDATE_MODIFIER,
-} from '../../utilities/constants.mjs';
-import hasOwn from '../../utilities/hasOwn.mjs';
-import variablesToString from '../../utilities/variablesToString.mjs';
+} from '../../utilities/constants.mts';
+import hasOwn from '../../utilities/hasOwn.mts';
+import variablesToString from '../../utilities/variablesToString.mts';
 import type {
   ChangedFields,
   ChangedFieldsArray,
   ChangedFieldsPathPart,
   FieldWithArguments,
   SupertypeMap,
-} from '../internalTypes.mjs';
-import recordCurrentObject from '../proxyObjects/recordCurrentObject.mjs';
+} from '../internalTypes.mts';
+import recordCurrentObject from '../proxyObjects/recordCurrentObject.mts';
 import type {
   DataIdFromObjectFunction,
   OptimizedReadMap,
   ReadFromIdFunction,
-} from '../types.mjs';
-import getFieldValue from './getFieldValue.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mjs';
-import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+} from '../types.mts';
+import getFieldValue from './getFieldValue.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mts';
+import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mts';
 
 type ToReferenceFunction = NormalizedCache['toReference'];
 type CanReadFunction = NormalizedCache['canRead'];

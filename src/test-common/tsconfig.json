@@ -1,5 +1,8 @@
 // Used for @typescript-eslint
 {
   "extends": ["../test/tsconfig.json"],
+  "compilerOptions": {
+    "types": ["node"]
+  },
   "include": ["./**/*.mts", "../test/setupTest.mts"]
 }

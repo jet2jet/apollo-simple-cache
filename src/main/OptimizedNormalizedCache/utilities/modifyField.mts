@@ -1,40 +1,37 @@
 import {
   isReference,
-  type Modifiers,
   type Reference,
   type StoreObject,
 } from '@apollo/client/cache';
+import {
+  DELETE_MODIFIER,
+  INVALIDATE_MODIFIER,
+} from '../../utilities/constants.mts';
+import hasOwn from '../../utilities/hasOwn.mts';
+import variablesToString from '../../utilities/variablesToString.mts';
 import type {
-  AllFieldsModifier,
   CanReadFunction,
   Modifier,
   ModifierDetails,
   ReadFieldOptions,
   ToReferenceFunction,
-} from '@apollo/client/cache/core/types/common';
-import {
-  DELETE_MODIFIER,
-  INVALIDATE_MODIFIER,
-} from '../../utilities/constants.mjs';
-import hasOwn from '../../utilities/hasOwn.mjs';
-import variablesToString from '../../utilities/variablesToString.mjs';
-import type {
   ChangedFields,
   ChangedFieldsArray,
   ChangedFieldsPathPart,
   FieldWithArguments,
   SupertypeMap,
-} from '../internalTypes.mjs';
-import recordCurrentObject from '../proxyObjects/recordCurrentObject.mjs';
+  FieldsDataParameter,
+} from '../internalTypes.mts';
+import recordCurrentObject from '../proxyObjects/recordCurrentObject.mts';
 import type {
   DataIdFromObjectFunction,
   OptimizedReadMap,
   ReadFromIdFunction,
-} from '../types.mjs';
-import getFieldValue from './getFieldValue.mjs';
-import getFieldWithArguments from './getFieldWithArguments.mjs';
-import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mjs';
-import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mjs';
+} from '../types.mts';
+import getFieldValue from './getFieldValue.mts';
+import getFieldWithArguments from './getFieldWithArguments.mts';
+import getNameFromFieldWithArgumentsName from './getNameFromFieldWithArgumentsName.mts';
+import pickRecordOfFieldWithArguments from './pickRecordOfFieldWithArguments.mts';
 
 type ModifierDetailsBase = Pick<
   ModifierDetails,
@@ -582,7 +579,7 @@ function doModify(
 export default function modifyField<Entity extends Record<string, any>>(
   rootStore: Record<string, unknown>,
   data: object,
-  fieldsData: Modifiers<Entity> | AllFieldsModifier<Entity>,
+  fieldsData: FieldsDataParameter<Entity>,
   supertypeMap: SupertypeMap | undefined,
   canRead: CanReadFunction,
   toReference: ToReferenceFunction,
@@ -610,7 +607,8 @@ export default function modifyField<Entity extends Record<string, any>>(
     }
 
     const actualFieldName = getNameFromFieldWithArgumentsName(fieldName);
-    const fieldFunction =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fieldFunction: Modifier<any> | undefined =
       typeof fieldsData === 'function'
         ? fieldsData
         : fieldsData[actualFieldName || fieldName];
@@ -633,7 +631,7 @@ export default function modifyField<Entity extends Record<string, any>>(
           actualFieldName!,
           makeFieldNameWithArgumentsForProxy(actualFieldName!, args),
           recordValue,
-          fieldFunction as Modifier<unknown>,
+          fieldFunction,
           detailsBase,
           proxyMap,
           supertypeMap,
@@ -672,7 +670,7 @@ export default function modifyField<Entity extends Record<string, any>>(
         fieldName,
         fieldName,
         value,
-        fieldFunction as Modifier<unknown>,
+        fieldFunction,
         detailsBase,
         proxyMap,
         supertypeMap,

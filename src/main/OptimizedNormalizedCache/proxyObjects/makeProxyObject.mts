@@ -1,18 +1,18 @@
 import { isReference, type Reference, type StoreObject } from '@apollo/client';
 import type { SelectionSetNode } from 'graphql';
-import cloneVariables from '../../utilities/cloneVariables.mjs';
-import hasOwn from '../../utilities/hasOwn.mjs';
+import cloneVariables from '../../utilities/cloneVariables.mts';
+import hasOwn from '../../utilities/hasOwn.mts';
 import {
   SYMBOL_PROXY_ARRAY,
   type DataStoreObject,
   type FragmentMap,
   type SelectionTuple,
-} from '../internalTypes.mjs';
-import getActualTypename from '../utilities/getActualTypename.mjs';
-import getCachedSelections from '../utilities/getCachedSelections.mjs';
-import getFieldValue from '../utilities/getFieldValue.mjs';
-import findExistingProxy from './findExistingProxy.mjs';
-import proxyObjectGetter from './proxyObjectGetter.mjs';
+} from '../internalTypes.mts';
+import getActualTypename from '../utilities/getActualTypename.mts';
+import getCachedSelections from '../utilities/getCachedSelections.mts';
+import getFieldValue from '../utilities/getFieldValue.mts';
+import findExistingProxy from './findExistingProxy.mts';
+import proxyObjectGetter from './proxyObjectGetter.mts';
 import {
   PROXY_SYMBOL_BASE,
   PROXY_SYMBOL_DIRTY,
@@ -25,7 +25,7 @@ import {
   PROXY_SYMBOL_RECORDED,
   type BaseCache,
   type ProxyObject,
-} from './types.mjs';
+} from './types.mts';
 
 const proxyHandler: ProxyHandler<ProxyObject> & { __proto__: null } = {
   __proto__: null,
