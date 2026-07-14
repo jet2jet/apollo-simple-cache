@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.0
+
+- Update dependencies; now supports graphql@17
+- Support for import path `apollo-simple-client/v3` (use Apollo Client v3)
+  - Currently `apollo-simple-client` still refers to the modules using Apollo Client v3; for Apollo Client v4, it is still necessary to use `apollo-simple-client/v4`.
+- Update internal implementations (use Node.js test runner)
+
 ## v0.4.3
 
 - Fix to record (save) proxy object recursively
